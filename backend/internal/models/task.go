@@ -1,0 +1,42 @@
+package models
+
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"time"
+)
+
+const (
+	StatusNotStarted = "not-started"
+	StatusInProgress = "in-progress"
+	StatusDone       = "done"
+)
+
+type Task struct {
+	ID          string         `gorm:"type:char(36);primary_key" json:"id"`
+	Title       string         `gorm:"not null" json:"title"`
+	Description string         `json:"description"`
+	Status      string         `gorm:"default:'not-started'" json:"status"`
+	Order       int            `gorm:"default:0" json:"order"`
+	UserID      string         `gorm:"type:char(36);not null;index" json:"userId"`
+	User        User           `json:"user,omitempty"`
+	Comments    []Comment      `json:"comments,omitempty"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (u *Task) BeforeCreate(tx *gorm.DB) error { // kalo disini fungsi before create itu buat bikin unique uuid
+	if u.ID == "" {
+		u.ID = uuid.New().String()
+	}
+	return nil
+}
+
+type TaskStats struct {
+	Total      int     `json:"total"`
+	NotStarted int     `json:"notStarted"`
+	InProgress int     `json:"inProgress"`
+	Done       int     `json:"done"`
+	Percent    float64 `json:"percent"`
+}
