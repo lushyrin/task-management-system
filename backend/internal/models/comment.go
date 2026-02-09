@@ -10,7 +10,7 @@ type Comment struct {
 	ID        string         `gorm:"type:char(36);primary_key" json:"id"`
 	Content   string         `gorm:"not null" json:"content"`
 	TaskID    string         `gorm:"type:char(36);not null;index" json:"taskId"`
-	Task      Task           `json:"task,omitempty"`
+	Task      Task           `json:"-"`
 	UserID    string         `gorm:"type:char(36);not null" json:"userId"`
 	User      User           `json:"user,omitempty"`
 	CreatedAt time.Time      `json:"createdAt"`

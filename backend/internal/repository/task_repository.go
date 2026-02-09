@@ -46,7 +46,9 @@ func (r *taskRepository) Create(task *models.Task) error {
 
 func (r *taskRepository) FindByID(id string) (*models.Task, error) {
 	var task models.Task
-	err := r.db.Preload("User").Preload("Comments").First(&task, "id = ?", id).Error
+	err := r.db.Preload("User").Preload("Comments", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("User")
+	}).First(&task, "id = ? ", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,9 @@ func (r *taskRepository) FindByID(id string) (*models.Task, error) {
 
 func (r *taskRepository) FindByIDAndUserID(id, userID string) (*models.Task, error) {
 	var task models.Task
-	err := r.db.Preload("User").Preload("Comments").First(&task, "id = ? AND user_id = ?", id, userID).Error
+	err := r.db.Preload("User").Preload("Comments", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("User")
+	}).First(&task, "id = ? AND user_id = ? ", id, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +68,9 @@ func (r *taskRepository) FindByIDAndUserID(id, userID string) (*models.Task, err
 
 func (r *taskRepository) FindAllByUserID(userID string) ([]models.Task, error) {
 	var tasks []models.Task
-	err := r.db.Preload("User").Preload("Comments").Where("user_id = ?", userID).Order("\"order\" ASC").Find(&tasks).Error
+	err := r.db.Preload("User").Preload("Comments", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("User")
+	}).Where("user_id = ?", userID).Order("\"order\" ASC").Find(&tasks).Error
 	return tasks, err
 }
 

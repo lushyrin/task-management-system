@@ -24,7 +24,17 @@ func NewCommentRepository(db *gorm.DB) CommentRepository {
 }
 
 func (r *commentRepository) Create(comment *models.Comment) error {
-	return r.db.Create(comment).Error
+	err := r.db.Create(comment).Error
+	if err != nil {
+		return err
+	}
+	var createdComment models.Comment
+	err = r.db.Preload("User").First(&createdComment, "id = ?", comment.ID).Error
+	if err != nil {
+		return err
+	}
+	*comment = createdComment
+	return nil
 }
 
 func (r *commentRepository) FindByID(id string) (*models.Comment, error) {

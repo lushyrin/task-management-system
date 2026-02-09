@@ -31,7 +31,6 @@ type UpdateCommentRequest struct {
 	Content string `json:"content"`
 }
 
-// Create creates a new comment on a task
 func (s *CommentService) Create(req *CreateCommentRequest, userID string) (*models.Comment, error) {
 	if req.Content == "" {
 		return nil, errors.New("content cannot be empty")
@@ -56,17 +55,13 @@ func (s *CommentService) Create(req *CreateCommentRequest, userID string) (*mode
 	if err != nil {
 		return nil, errors.New("failed to create comment")
 	}
-
-	// Reload to get user data
-	return s.commentRepo.FindByID(comment.ID)
+	return comment, nil
 }
 
-// GetAllByTaskID retrieves all comments for a task
 func (s *CommentService) GetAllByTaskID(taskID string) ([]models.Comment, error) {
 	return s.commentRepo.FindAllByTaskID(taskID)
 }
 
-// GetByID retrieves a comment by its ID
 func (s *CommentService) GetByID(id string) (*models.Comment, error) {
 	comment, err := s.commentRepo.FindByID(id)
 	if err != nil {
@@ -75,7 +70,6 @@ func (s *CommentService) GetByID(id string) (*models.Comment, error) {
 	return comment, nil
 }
 
-// Update updates an existing comment (only owner can update)
 func (s *CommentService) Update(id string, userID string, req *UpdateCommentRequest) (*models.Comment, error) {
 	if req.Content == "" {
 		return nil, errors.New("content cannot be empty")
@@ -92,7 +86,7 @@ func (s *CommentService) Update(id string, userID string, req *UpdateCommentRequ
 		return nil, errors.New("failed to update comment")
 	}
 
-	return s.commentRepo.FindByID(comment.ID)
+	return comment, nil
 }
 
 // Delete removes a comment (only owner can delete)
