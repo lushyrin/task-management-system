@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"minitask/internal/models"
-
+	// "fmt"
 	"gorm.io/gorm"
+	"minitask/internal/models"
 )
 
 type TaskRepository interface {
@@ -28,12 +28,25 @@ func NewTaskRepository(db *gorm.DB) TaskRepository {
 }
 
 func (r *taskRepository) Create(task *models.Task) error {
-	return r.db.Create(task).Error
+	err := r.db.Create(task).Error
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("DEBUG: Task created with UserID: %s\n", task.UserID)
+	//load task n user data ke variable baru, apperently gabisa reuse variable sama buat loading
+	var createdTask models.Task
+	err = r.db.Preload("User").First(&createdTask, "id = ?", task.ID).Error
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("DEBUG: Fetched user: %+v\n", createdTask.User)
+	*task = createdTask
+	return nil
 }
 
 func (r *taskRepository) FindByID(id string) (*models.Task, error) {
 	var task models.Task
-	err := r.db.Preload("Comments").First(&task, "id = ?", id).Error
+	err := r.db.Preload("User").Preload("Comments").First(&task, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +55,7 @@ func (r *taskRepository) FindByID(id string) (*models.Task, error) {
 
 func (r *taskRepository) FindByIDAndUserID(id, userID string) (*models.Task, error) {
 	var task models.Task
-	err := r.db.Preload("Comments").First(&task, "id = ? AND user_id = ?", id, userID).Error
+	err := r.db.Preload("User").Preload("Comments").First(&task, "id = ? AND user_id = ?", id, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +64,7 @@ func (r *taskRepository) FindByIDAndUserID(id, userID string) (*models.Task, err
 
 func (r *taskRepository) FindAllByUserID(userID string) ([]models.Task, error) {
 	var tasks []models.Task
-	err := r.db.Where("user_id = ?", userID).Order("\"order\" ASC").Preload("Comments").Find(&tasks).Error
+	err := r.db.Preload("User").Preload("Comments").Where("user_id = ?", userID).Order("\"order\" ASC").Find(&tasks).Error
 	return tasks, err
 }
 

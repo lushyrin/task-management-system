@@ -19,7 +19,7 @@ type Task struct {
 	Status      string         `gorm:"default:'not-started'" json:"status"`
 	Order       int            `gorm:"default:0" json:"order"`
 	UserID      string         `gorm:"type:char(36);not null;index" json:"userId"`
-	User        User           `json:"user,omitempty"`
+	User        User           `json:"user" gorm:"foreignKey:UserID"`
 	Comments    []Comment      `json:"comments,omitempty"`
 	CreatedAt   time.Time      `json:"createdAt"`
 	UpdatedAt   time.Time      `json:"updatedAt"`

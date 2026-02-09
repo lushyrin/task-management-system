@@ -29,24 +29,21 @@ func (s *TaskService) Create(task *models.Task) error {
 	if task.Status == "" {
 		task.Status = models.StatusNotStarted // ini auto jadi kalo misal bikin task baru, pasti masuk ke notstarted
 	}
-	return s.db.Create(task).Error
+	return s.taskRepo.Create(task)
 }
 
 // getByID ini buat ambil task berdasarkan ID
 func (s *TaskService) GetByID(id string, userID string) (*models.Task, error) {
-	var task models.Task
-	err := s.db.Preload("Comments").First(&task, "id = ? AND user_id = ?", id, userID).Error
+	task, err := s.taskRepo.FindByIDAndUserID(id, userID)
 	if err != nil {
 		return nil, errors.New("task not found!")
 	}
-	return &task, nil
+	return task, nil
 }
 
 // GetAllByUserID mengambil semua task milik user
 func (s *TaskService) GetAllByUserID(userID string) ([]models.Task, error) {
-	var tasks []models.Task
-	err := s.db.Where("user_id = ?", userID).Order("\"order\" ASC").Preload("Comments").Find(&tasks).Error
-	return tasks, err
+	return s.taskRepo.FindAllByUserID(userID)
 }
 
 // Update task yang udah ada
