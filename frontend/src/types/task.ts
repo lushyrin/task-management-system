@@ -1,7 +1,7 @@
 import type { User } from "./user";
 import type { Comment } from "./comment";
 
-export type TaskStatus = 'not-started' | 'in-progress' | 'done';
+export type TaskStatus = 'not_started' | 'in_progress' | 'done';
 
 export interface Task {
     id: string;

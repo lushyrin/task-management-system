@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	StatusNotStarted = "not-started"
-	StatusInProgress = "in-progress"
+	StatusNotStarted = "not_started"
+	StatusInProgress = "in_progress"
 	StatusDone       = "done"
 )
 
@@ -16,7 +16,7 @@ type Task struct {
 	ID          string         `gorm:"type:char(36);primary_key" json:"id"`
 	Title       string         `gorm:"not null" json:"title"`
 	Description string         `json:"description"`
-	Status      string         `gorm:"default:'not-started'" json:"status"`
+	Status      string         `gorm:"default:'not_started'" json:"status"`
 	Order       int            `gorm:"default:0" json:"order"`
 	UserID      string         `gorm:"type:char(36);not null;index" json:"userId"`
 	User        User           `json:"user" gorm:"foreignKey:UserID"`
