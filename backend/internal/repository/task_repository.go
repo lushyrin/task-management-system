@@ -6,6 +6,7 @@ import (
 	"minitask/internal/models"
 )
 
+// komuikasi lngsung ke db
 type TaskRepository interface {
 	Create(task *models.Task) error
 	FindByID(id string) (*models.Task, error)

@@ -9,7 +9,7 @@ export const commentService = {
     },
     //get comment by id
     getById: async (id: string): Promise<Comment> => {
-        const response = await api.get<Comment>(`/comment/${id}`);
+        const response = await api.get<Comment>(`/comments/${id}`);
         return response.data;
     },
     //create

@@ -45,7 +45,7 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
-
+		//
 		if err != nil {
 			return c.JSON(http.StatusUnauthorized, map[string]string{
 				"error": "Invalid or expired token",
@@ -66,7 +66,7 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 // GenerateToken creates a new JWT token for a user
 func GenerateToken(userID, username string) (string, error) {
-	claims := &JWTClaims{
+	claims := &JWTClaims{ //decode token yg y=udh di  paes
 		UserID:   userID,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{

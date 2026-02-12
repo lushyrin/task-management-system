@@ -28,11 +28,11 @@ export const taskService = {
     },
     //get task sats
     getStats: async (): Promise<TaskStats> => {
-        const response = await api.get<TaskStats>('task/stats');
+        const response = await api.get<TaskStats>('/task/stats');
         return response.data;
     },
     //update order
-    updateOrder: async (data: UpdateTaskRequest): Promise<void> => {
-        await api.put('tasks/order', data);
+    updateOrder: async (data: { taskIds: string[] }): Promise<void> => {
+        await api.put('/tasks/order', data);
     }
 }
