@@ -1,38 +1,32 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Checkbox, Divider, Typography, Alert, Space } from 'antd';
+import React from 'react';
+import { Form, Input, Button, Checkbox, Divider, Typography, Alert } from 'antd';
 import { UserOutlined, LockOutlined, GoogleOutlined, AppleFilled } from '@ant-design/icons';
-import { useAuthContext } from '@/context/AuthContext';
+
 const { Title, Text, Link } = Typography;
 
-interface LoginFormData {
-    email: string;
-    password: string;
-    remember: boolean;
+interface LoginFormProps {
+    onSubmit: (data: { email: string; password: string; rememberMe: boolean }) => void;
+    onForgotPassword: () => void;
+    onSignUp: () => void;
+    loading?: boolean;
+    error?: string;
 }
 
-const Login = () => {
-    const navigate = useNavigate();
-    const { login, isAuthenticated } = useAuthContext();
+const LoginForm: React.FC<LoginFormProps> = ({
+    onSubmit,
+    onForgotPassword,
+    onSignUp,
+    loading = false,
+    error,
+}) => {
     const [form] = Form.useForm();
 
-    // Redirect if already authenticated
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/tasks', { replace: true });
-        }
-    }, [isAuthenticated, navigate]);
-
-    const handleSubmit = async (values: LoginFormData) => {
-        try {
-            await login.mutateAsync({
-                email: values.email,
-                password: values.password,
-            });
-            navigate('/tasks', { replace: true });
-        } catch (error) {
-            console.error('Login failed:', error);
-        }
+    const handleSubmit = (values: { email: string; password: string; remember: boolean }) => {
+        onSubmit({
+            email: values.email,
+            password: values.password,
+            rememberMe: values.remember,
+        });
     };
 
     const handleSocialLogin = (provider: 'google' | 'apple') => {
@@ -40,7 +34,7 @@ const Login = () => {
     };
 
     return (
-        <>
+        <div className="w-full max-w-md">
             <div className="mb-8">
                 <Title level={2} className="!mb-2">
                     Welcome Back
@@ -50,10 +44,9 @@ const Login = () => {
                 </Text>
             </div>
 
-            {login.isError && (
+            {error && (
                 <Alert
-                    message="Login Failed"
-                    description="Invalid email or password. Please try again."
+                    message={error}
                     type="error"
                     showIcon
                     className="mb-6"
@@ -65,7 +58,7 @@ const Login = () => {
                 form={form}
                 layout="vertical"
                 onFinish={handleSubmit}
-                initialValues={{ remember: true }}
+                initialValues={{ remember: false }}
             >
                 <Form.Item
                     name="email"
@@ -99,11 +92,9 @@ const Login = () => {
 
                 <div className="flex items-center justify-between mb-6">
                     <Form.Item name="remember" valuePropName="checked" className="!mb-0">
-                        <Checkbox>Remember me</Checkbox>
+                        <Checkbox>Remember Me</Checkbox>
                     </Form.Item>
-                    <Link onClick={() => navigate('/forgot-password')}>
-                        Forgot password?
-                    </Link>
+                    <Link onClick={onForgotPassword}>Forgot Your Password?</Link>
                 </div>
 
                 <Form.Item>
@@ -112,46 +103,48 @@ const Login = () => {
                         htmlType="submit"
                         size="large"
                         block
-                        loading={login.isPending}
+                        loading={loading}
                     >
-                        Sign In
+                        Log In
                     </Button>
                 </Form.Item>
+
+                <Divider>
+                    <Text type="secondary" className="text-xs">
+                        Or Login With
+                    </Text>
+                </Divider>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <Button
+                        block
+                        size="large"
+                        icon={<GoogleOutlined />}
+                        onClick={() => handleSocialLogin('google')}
+                        disabled={loading}
+                    >
+                        Google
+                    </Button>
+                    <Button
+                        block
+                        size="large"
+                        icon={<AppleFilled />}
+                        onClick={() => handleSocialLogin('apple')}
+                        disabled={loading}
+                    >
+                        Apple
+                    </Button>
+                </div>
+
+                <div className="text-center mt-6">
+                    <Text type="secondary">
+                        Don't Have An Account?{' '}
+                        <Link onClick={onSignUp}>Register Now.</Link>
+                    </Text>
+                </div>
             </Form>
-
-            <Divider>
-                <Text type="secondary" className="text-xs">
-                    Or continue with
-                </Text>
-            </Divider>
-
-            <Space className="w-full" size="middle">
-                <Button
-                    block
-                    size="large"
-                    icon={<GoogleOutlined />}
-                    onClick={() => handleSocialLogin('google')}
-                >
-                    Google
-                </Button>
-                <Button
-                    block
-                    size="large"
-                    icon={<AppleFilled />}
-                    onClick={() => handleSocialLogin('apple')}
-                >
-                    Apple
-                </Button>
-            </Space>
-
-            <div className="mt-6 text-center">
-                <Text type="secondary">
-                    Don't have an account?{' '}
-                    <Link onClick={() => navigate('/register')}>Sign up</Link>
-                </Text>
-            </div>
-        </>
+        </div>
     );
 };
 
-export default Login;
+export default LoginForm;

@@ -1,0 +1,273 @@
+@import "tailwindcss";
+
+/* Custom global styles */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-gray-50 text-gray-900;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Status badge colors */
+.status-not-started {
+    @apply bg-gray-100 text-gray-700 border-gray-200;
+}
+
+.status-in-progress {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+}
+
+.status-done {
+    @apply bg-green-50 text-green-700 border-green-200;
+}
+
+/* Kanban board styles */
+.kanban-container {
+    @apply flex gap-4 overflow-x-auto pb-4;
+    min-height: calc(100vh - 200px);
+}
+
+.kanban-column {
+    @apply flex-shrink-0 w-80 bg-gray-100 rounded-lg p-4;
+}
+
+.kanban-column-header {
+    @apply flex items-center justify-between mb-4;
+}
+
+.kanban-column-title {
+    @apply font-semibold text-gray-700 flex items-center gap-2;
+}
+
+.kanban-column-count {
+    @apply bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full;
+}
+
+.kanban-column-content {
+    @apply space-y-3 min-h-[100px];
+}
+
+/* Task card styles */
+.task-card {
+    @apply bg-white rounded-lg p-4 shadow-sm border border-gray-200 cursor-pointer 
+           hover:shadow-md transition-shadow duration-200;
+}
+
+.task-card-title {
+    @apply font-medium text-gray-900 mb-2 line-clamp-2;
+}
+
+.task-card-description {
+    @apply text-sm text-gray-500 mb-3 line-clamp-2;
+}
+
+.task-card-footer {
+    @apply flex items-center justify-between text-xs text-gray-400;
+}
+
+/* Task detail styles */
+.task-detail-page {
+    @apply max-w-4xl mx-auto p-6;
+}
+
+.task-detail-header {
+    @apply flex items-center justify-between mb-6;
+}
+
+.task-detail-content {
+    @apply bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6;
+}
+
+.task-meta {
+    @apply flex flex-wrap gap-4 text-sm text-gray-500 mb-4;
+}
+
+.task-description {
+    @apply text-gray-700 leading-relaxed;
+}
+
+.task-comments-section {
+    @apply bg-white rounded-lg p-6 shadow-sm border border-gray-200;
+}
+
+/* Comment styles */
+.comment-list {
+    @apply space-y-4;
+}
+
+.comment-list-title {
+    @apply text-lg font-semibold mb-4;
+}
+
+.comment-form {
+    @apply flex gap-3 mb-6;
+}
+
+.comment-item {
+    @apply p-4 bg-gray-50 rounded-lg;
+}
+
+.comment-header {
+    @apply flex items-center justify-between mb-2;
+}
+
+.comment-author {
+    @apply font-medium text-gray-900;
+}
+
+.comment-time {
+    @apply text-xs text-gray-400;
+}
+
+.comment-content {
+    @apply text-gray-700;
+}
+
+.comment-edit {
+    @apply space-y-2;
+}
+
+.comment-edit-actions {
+    @apply flex gap-2;
+}
+
+.comment-actions {
+    @apply flex gap-2 mt-2;
+}
+
+.no-comments {
+    @apply text-center text-gray-400 py-8;
+}
+
+.comment-list-loading {
+    @apply flex justify-center py-8;
+}
+
+/* Task list styles */
+.task-list {
+    @apply space-y-3;
+}
+
+.task-list-header {
+    @apply flex items-center justify-between mb-4;
+}
+
+.task-list-filters {
+    @apply flex gap-3 mb-4;
+}
+
+/* Navigation styles */
+.navbar {
+    @apply bg-white border-b border-gray-200 sticky top-0 z-50;
+}
+
+.navbar-content {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.navbar-flex {
+    @apply flex items-center justify-between h-16;
+}
+
+.navbar-logo {
+    @apply flex items-center gap-2 text-xl font-bold text-blue-600;
+}
+
+.navbar-links {
+    @apply hidden md:flex items-center gap-6;
+}
+
+.navbar-link {
+    @apply text-gray-600 hover:text-blue-600 transition-colors;
+}
+
+.navbar-link-active {
+    @apply text-blue-600 font-medium;
+}
+
+.navbar-actions {
+    @apply flex items-center gap-3;
+}
+
+/* Page layouts */
+.page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.page-header {
+    @apply flex items-center justify-between mb-6;
+}
+
+.page-title {
+    @apply text-2xl font-bold text-gray-900;
+}
+
+/* Stats cards */
+.stats-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8;
+}
+
+.stats-card {
+    @apply bg-white rounded-lg p-6 shadow-sm border border-gray-200;
+}
+
+.stats-card-title {
+    @apply text-sm text-gray-500 mb-1;
+}
+
+.stats-card-value {
+    @apply text-2xl font-bold text-gray-900;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Drag and drop styles */
+.dragging {
+    @apply opacity-50 rotate-2;
+}
+
+.drag-over {
+    @apply bg-blue-50 border-blue-300;
+}

@@ -1,51 +1,48 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Checkbox, Divider, Typography, Alert, Space } from 'antd';
+import React from 'react';
+import { Form, Input, Button, Checkbox, Divider, Typography, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, GoogleOutlined, AppleFilled } from '@ant-design/icons';
-import { useAuthContext } from '@/context/AuthContext';
 
 const { Title, Text, Link } = Typography;
 
-interface RegisterFormData {
-    username: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    agreeToTerms: boolean;
+export interface RegisterFormProps {
+    onSubmit: (data: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        password: string;
+        confirmPassword: string;
+        agreeToTerms: boolean;
+    }) => void;
+    onSignIn: () => void;
+    loading?: boolean;
+    error?: string;
 }
 
-const Register = () => {
-    const navigate = useNavigate();
-    const { register, isAuthenticated } = useAuthContext();
+const RegisterForm: React.FC<RegisterFormProps> = ({
+    onSubmit,
+    onSignIn,
+    loading = false,
+    error,
+}) => {
     const [form] = Form.useForm();
 
-    // Redirect if already authenticated
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/tasks', { replace: true });
-        }
-    }, [isAuthenticated, navigate]);
-
-    const handleSubmit = async (values: RegisterFormData) => {
-        try {
-            await register.mutateAsync({
-                username: values.username,
-                email: values.email,
-                password: values.password,
-            });
-            navigate('/tasks', { replace: true });
-        } catch (error) {
-            // Error is handled by the mutation
-        }
+    const handleSubmit = (values: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        password: string;
+        confirmPassword: string;
+        agreeToTerms: boolean;
+    }) => {
+        onSubmit(values);
     };
 
-    const handleSocialRegister = (provider: 'google' | 'apple') => {
+    const handleSocialSignUp = (provider: 'google' | 'apple') => {
         console.log(`Sign up with ${provider}`);
-        // TODO: Implement social login
     };
 
     return (
-        <>
+        <div className="w-full max-w-md">
             <div className="mb-8">
                 <Title level={2} className="!mb-2">
                     Create Account
@@ -55,10 +52,9 @@ const Register = () => {
                 </Text>
             </div>
 
-            {register.isError && (
+            {error && (
                 <Alert
-                    message="Registration Failed"
-                    description={register.error?.message || "An error occurred during registration. Please try again."}
+                    message={error}
                     type="error"
                     showIcon
                     className="mb-6"
@@ -71,21 +67,31 @@ const Register = () => {
                 layout="vertical"
                 onFinish={handleSubmit}
             >
-                <Form.Item
-                    name="username"
-                    label="Username"
-                    rules={[
-                        { required: true, message: 'Please enter your username' },
-                        { min: 3, message: 'Username must be at least 3 characters' },
-                        { max: 30, message: 'Username must be less than 30 characters' },
-                    ]}
-                >
-                    <Input
-                        prefix={<UserOutlined className="text-gray-400" />}
-                        placeholder="Enter your username"
-                        size="large"
-                    />
-                </Form.Item>
+                <div className="grid grid-cols-2 gap-4">
+                    <Form.Item
+                        name="firstName"
+                        label="First Name"
+                        rules={[{ required: true, message: 'First name is required' }]}
+                    >
+                        <Input
+                            prefix={<UserOutlined className="text-gray-400" />}
+                            placeholder="John"
+                            size="large"
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="lastName"
+                        label="Last Name"
+                        rules={[{ required: true, message: 'Last name is required' }]}
+                    >
+                        <Input
+                            prefix={<UserOutlined className="text-gray-400" />}
+                            placeholder="Doe"
+                            size="large"
+                        />
+                    </Form.Item>
+                </div>
 
                 <Form.Item
                     name="email"
@@ -107,7 +113,7 @@ const Register = () => {
                     label="Password"
                     rules={[
                         { required: true, message: 'Please enter your password' },
-                        { min: 6, message: 'Password must be at least 6 characters' },
+                        { min: 8, message: 'Password must be at least 8 characters' },
                     ]}
                 >
                     <Input.Password
@@ -153,8 +159,7 @@ const Register = () => {
                     ]}
                 >
                     <Checkbox>
-                        I agree to the <Link>Terms of Service</Link> and{' '}
-                        <Link>Privacy Policy</Link>
+                        I agree to the Terms of Service and Privacy Policy
                     </Checkbox>
                 </Form.Item>
 
@@ -164,46 +169,48 @@ const Register = () => {
                         htmlType="submit"
                         size="large"
                         block
-                        loading={register.isPending}
+                        loading={loading}
                     >
                         Create Account
                     </Button>
                 </Form.Item>
+
+                <Divider>
+                    <Text type="secondary" className="text-xs">
+                        Or Sign Up With
+                    </Text>
+                </Divider>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <Button
+                        block
+                        size="large"
+                        icon={<GoogleOutlined />}
+                        onClick={() => handleSocialSignUp('google')}
+                        disabled={loading}
+                    >
+                        Google
+                    </Button>
+                    <Button
+                        block
+                        size="large"
+                        icon={<AppleFilled />}
+                        onClick={() => handleSocialSignUp('apple')}
+                        disabled={loading}
+                    >
+                        Apple
+                    </Button>
+                </div>
+
+                <div className="text-center mt-6">
+                    <Text type="secondary">
+                        Already Have An Account?{' '}
+                        <Link onClick={onSignIn}>Sign In.</Link>
+                    </Text>
+                </div>
             </Form>
-
-            <Divider>
-                <Text type="secondary" className="text-xs">
-                    Or sign up with
-                </Text>
-            </Divider>
-
-            <Space className="w-full" size="middle">
-                <Button
-                    block
-                    size="large"
-                    icon={<GoogleOutlined />}
-                    onClick={() => handleSocialRegister('google')}
-                >
-                    Google
-                </Button>
-                <Button
-                    block
-                    size="large"
-                    icon={<AppleFilled />}
-                    onClick={() => handleSocialRegister('apple')}
-                >
-                    Apple
-                </Button>
-            </Space>
-
-            <div className="mt-6 text-center">
-                <Text type="secondary">
-                    Already have an account?{' '}
-                    <Link onClick={() => navigate('/login')}>Sign in</Link>
-                </Text>
-            </div>
-        </>
+        </div>
     );
 };
 
-export default Register;
+export default RegisterForm;
