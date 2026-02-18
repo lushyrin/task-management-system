@@ -12,7 +12,14 @@ const Button: React.FC<ButtonProps> = ({
     icon,
     onClick,
     className = '',
+    rounded = 'full',
 }) => {
+    const roundedClasses = {
+        sm: 'rounded-sm',
+        md: 'rounded-md',
+        lg: 'rounded-lg',
+        full: 'rounded-full'
+    };
     const baseClasses = 'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variantClasses = {
@@ -23,9 +30,9 @@ const Button: React.FC<ButtonProps> = ({
     };
 
     const sizeClasses = {
-        sm: 'px-3 py-2 text-sm rounded-md',
-        md: 'px-4 py-2 text-sm rounded-lg',
-        lg: 'px-6 py-3 text-base rounded-lg',
+        sm: `px-3 py-2 text-sm ${rounded ? roundedClasses[rounded] : 'rounded-md'}`,
+        md: `px-4 py-2 text-sm ${rounded ? roundedClasses[rounded] : 'rounded-lg'}`,
+        lg: `px-6 py-3 text-base ${rounded ? roundedClasses[rounded] : 'rounded-lg'}`,
     };
 
     const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? 'w-full' : ''} ${className}`;

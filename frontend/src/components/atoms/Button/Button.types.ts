@@ -3,6 +3,7 @@ export interface ButtonProps {
     type?: 'button' | 'submit' | 'reset';
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
     size?: 'sm' | 'md' | 'lg';
+    rounded?: 'sm' | 'md' | 'lg' | 'full';
     fullWidth?: boolean;
     disabled?: boolean;
     loading?: boolean;

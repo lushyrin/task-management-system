@@ -42,7 +42,7 @@ const Login = () => {
     return (
         <>
             <div className="mb-8">
-                <Title level={2} className="!mb-2">
+                <Title level={2} className="mb-2!">
                     Welcome Back
                 </Title>
                 <Text type="secondary">
@@ -98,7 +98,7 @@ const Login = () => {
                 </Form.Item>
 
                 <div className="flex items-center justify-between mb-6">
-                    <Form.Item name="remember" valuePropName="checked" className="!mb-0">
+                    <Form.Item name="remember" valuePropName="checked" className="mb-0!">
                         <Checkbox>Remember me</Checkbox>
                     </Form.Item>
                     <Link onClick={() => navigate('/forgot-password')}>
