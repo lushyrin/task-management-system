@@ -77,23 +77,21 @@ const Home = () => {
             </header>
 
             <div className="min-h-[calc(100vh-64px)] flex">
-                <div className="hidden lg:block flex-1 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #fafafa 0%, #fefce8 100%)' }}>
-                    {/* Animated blur circles */}
-                    <div className="absolute top-20 left-10 w-40 h-40 bg-yellow-300/40 rounded-full blur-3xl animate-pulse"></div>
+                <div className="hidden lg:block flex-1 relative overflow-hidden bg-white" >
+                    {/* <div className="absolute top-20 left-10 w-40 h-40 bg-yellow-300/40 rounded-full blur-3xl animate-pulse"></div>
                     <div className="absolute bottom-20 right-10 w-56 h-56 bg-orange-300/30 rounded-full blur-3xl" style={{ animation: 'pulse 4s ease-in-out infinite' }}></div>
-                    <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-pink-300/20 rounded-full blur-3xl" style={{ animation: 'pulse 3s ease-in-out infinite 1s' }}></div>
+                    <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-pink-300/20 rounded-full blur-3xl" style={{ animation: 'pulse 3s ease-in-out infinite 1s' }}></div> */}
 
-                    {/* Floating decorative post-its */}
                     <div
                         className="absolute top-16 right-16 w-16 h-16 rounded shadow-lg transform rotate-12"
                         style={{ background: '#fef08a', animation: 'float 3s ease-in-out infinite' } as React.CSSProperties}
                     ></div>
                     <div
-                        className="absolute bottom-32 left-12 w-12 h-12 rounded shadow-md transform -rotate-6"
+                        className="absolute bottom-20 left-12 w-12 h-12 rounded shadow-md transform -rotate-6"
                         style={{ background: '#fbcfe8', animation: 'float 4s ease-in-out infinite 0.5s' } as React.CSSProperties}
                     ></div>
                     <div
-                        className="absolute top-1/2 right-8 w-10 h-10 rounded shadow-sm transform rotate-3"
+                        className="absolute top-14 right-8 w-10 h-10 rounded shadow-sm transform rotate-3"
                         style={{ background: '#fed7aa', animation: 'float 3.5s ease-in-out infinite 1s' } as React.CSSProperties}
                     ></div>
 
@@ -326,7 +324,6 @@ const Home = () => {
                             )}
                         </Space>
 
-                        {/* Trust indicators */}
                         <div className="mt-10 pt-8 border-t" style={{ borderColor: '#e5e5e5' }}>
                             <p className="text-sm mb-4" style={{ color: '#a3a3a3' }}>
                                 Trusted by teams worldwide

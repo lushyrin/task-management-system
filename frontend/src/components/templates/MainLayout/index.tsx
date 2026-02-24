@@ -3,9 +3,20 @@ import { Navbar } from '../../organisms';
 
 const MainLayout = () => {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div 
+            style={{
+                minHeight: '100vh',
+                background: '#fafafa',
+            }}
+        >
             <Navbar />
-            <main className="page-container">
+            <main 
+                style={{
+                    maxWidth: '1200px',
+                    margin: '0 auto',
+                    padding: '24px',
+                }}
+            >
                 <Outlet />
             </main>
         </div>

@@ -1,116 +1,139 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Alert, Button, Divider, Spin, Typography, Space } from 'antd';
+import { ArrowLeftOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { StatusBadge, PriorityBadge } from '@/components/atoms';
 import { CommentList } from '@/components/organisms';
-import { Button, Spinner, Typography } from '@/components/atoms';
 import { useGetTaskById } from '@/hooks/useTasks';
-import {
-    useGetCommentsByTaskId,
-    useCreateComment,
-    useUpdateComment,
-    useDeleteComment,
-} from '@/hooks/useComments';
-import { formatDate } from '@/utils/helpers';
-import type { TaskStatus } from '@/types';
+import { useGetCommentsByTaskId, useCreateComment, useUpdateComment, useDeleteComment } from '@/hooks/useComments';
+import { formatDistanceToNow } from '@/utils/helpers';
 
-const statusLabels: Record<TaskStatus, string> = {
-    not_started: 'Not Started',
-    in_progress: 'In Progress',
-    done: 'Done',
-};
 
-const statusColors: Record<TaskStatus, string> = {
-    not_started: 'status-not-started',
-    in_progress: 'status-in-progress',
-    done: 'status-done',
-};
-
-const TaskDetailPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+const { Title, Text, Paragraph } = Typography
+const TaskDetail: React.FC = () => {
+    const { id } = useParams<{ id: string }>()
     const navigate = useNavigate();
 
-    const { data: task, isLoading: isLoadingTask } = useGetTaskById(id || '');
-    const { data: comments, isLoading: isLoadingComments } = useGetCommentsByTaskId(id || '');
+    const { data: task, isLoading: taskLoading, isError: taskError } = useGetTaskById(id!)
+    const { data: comments, isLoading: commentsLoading } = useGetCommentsByTaskId(id!)
+    const createComment = useCreateComment()
+    const updateComment = useUpdateComment()
+    const deleteComment = useDeleteComment()
 
-    const createComment = useCreateComment();
-    const updateComment = useUpdateComment();
-    const deleteComment = useDeleteComment();
-
-    const handleCreateComment = (content: string) => {
-        if (id) {
-            createComment.mutate({ content, taskId: id });
-        }
-    };
-
-    const handleUpdateComment = (commentId: string, content: string) => {
-        updateComment.mutate({ id: commentId, data: { content } });
-    };
-
+    const handleCreateComment = (commentContent: string) => {
+        createComment.mutate({ taskId: id!, content: commentContent })
+    }
+    const handleUpdateComment = (commentId: string, commentContent: string) => {
+        updateComment.mutate({ id: commentId, data: { content: commentContent } })
+    }
     const handleDeleteComment = (commentId: string) => {
-        if (id) {
-            deleteComment.mutate({ id: commentId, taskId: id });
-        }
-    };
+        deleteComment.mutate({ id: commentId, taskId: id! })
+    }
 
-    if (isLoadingTask) {
+    if (taskLoading) {
         return (
-            <div className="task-detail-loading">
-                <Spinner />
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <Spin size="large" />
             </div>
         );
     }
-
-    if (!task) {
+    if (taskError || !task) {
         return (
-            <div className="task-detail-not-found">
-                <Typography.Title level={2}>Task Not Found</Typography.Title>
-                <Button onClick={() => navigate('/tasks')}>Back to Tasks</Button>
+            <div style={{ padding: '24px' }}>
+                <Alert
+                    type="error"
+                    showIcon
+                    message="Task not found"
+                    description="This task may have been deleted or you don't have access to it."
+                    action={
+                        <Button onClick={() => navigate('/tasks')}>
+                            Back to Tasks
+                        </Button>
+                    }
+                />
             </div>
         );
     }
-
     return (
         <div className="task-detail-page">
-            {/* Header */}
-            <div className="task-detail-header">
-                <Button onClick={() => navigate(-1)}>← Back</Button>
-                <div className={`task-status ${statusColors[task.status]}`}>
-                    {statusLabels[task.status]}
-                </div>
-            </div>
+            <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate(-1)}
+                style={{ marginBottom: '16px', color: '#737373', paddingLeft: 0 }}
+            >
+                Back
+            </Button>
 
-            {/* Task Info */}
             <div className="task-detail-content">
-                <Typography.Title level={1}>{task.title}</Typography.Title>
-                
-                <div className="task-meta">
-                    <span>Created by: {task.user?.username || 'Unknown'}</span>
-                    <span>Created: {formatDate(task.createdAt)}</span>
-                    {task.updatedAt !== task.createdAt && (
-                        <span>Updated: {formatDate(task.updatedAt)}</span>
+                <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+                        <Space size="small">
+                            <StatusBadge status={task.status} />
+                            {task.priority && <PriorityBadge priority={task.priority} />}
+                        </Space>
+                    </div>
+
+                    <Title
+                        level={2}
+                        style={{ margin: '0 0 8px 0', fontSize: '1.5rem', fontWeight: 700, color: '#171717' }}
+                    >
+                        {task.title}
+                    </Title>
+
+                    <div className="task-meta">
+                        <Space size="small" style={{ color: '#737373', fontSize: '0.875rem' }}>
+                            <UserOutlined />
+                            <Text type="secondary">
+                                {task.user?.username ?? 'Unknown'}
+                            </Text>
+                        </Space>
+
+                        <Space size="small" style={{ color: '#737373', fontSize: '0.875rem' }}>
+                            <CalendarOutlined />
+                            <Text type="secondary">
+                                Created {formatDistanceToNow(task.createdAt)}
+                            </Text>
+                        </Space>
+
+                        {task.updatedAt !== task.createdAt && (
+                            <Text type="secondary" style={{ fontSize: '0.875rem' }}>
+                                Updated {formatDistanceToNow(task.updatedAt)}
+                            </Text>
+                        )}
+                    </div>
+                </div>
+
+                <Divider style={{ margin: '16px 0' }} />
+
+                <div>
+                    <Text strong
+                        style={{ fontSize: '0.875rem', color: '#525252', display: 'block', marginBottom: '8px' }}>
+                        Description
+                    </Text>
+                    {task.description ? (
+                        <Paragraph className="task-description" style={{ margin: 0 }}>
+                            {task.description}
+                        </Paragraph>
+                    ) : (
+                        <Text type="secondary" style={{ fontSize: '0.875rem' }}>
+                            No description provided.
+                        </Text>
                     )}
                 </div>
-
-                <div className="task-description">
-                    <Typography.Title level={3}>Description</Typography.Title>
-                    <p>{task.description || 'No description provided.'}</p>
-                </div>
             </div>
 
-            {/* Comments Section */}
             <div className="task-comments-section">
                 <CommentList
                     comments={comments}
-                    isLoading={isLoadingComments}
-                    taskId={task.id}
+                    isLoading={commentsLoading}
                     onCreate={handleCreateComment}
                     onUpdate={handleUpdateComment}
                     onDelete={handleDeleteComment}
                     isCreating={createComment.isPending}
-                    isUpdating={updateComment.isPending}
-                    isDeleting={deleteComment.isPending}
                 />
             </div>
         </div>
     );
-};
+}
 
-export default TaskDetailPage;
+export default TaskDetail;
