@@ -1,18 +1,28 @@
 import useTasks from '@/hooks/useTasks';
 import { AppstoreAddOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { Radio, Space, Typography } from 'antd';
+import { Radio, Space, Typography, message } from 'antd';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Button from '@/components/atoms/Button';
-import { TaskList } from '@/components/organisms';
+import { TaskForm, TaskList } from '@/components/organisms';
+import type { CreateTaskRequest, UpdateTaskRequest } from '@/types';
 
 const { Title } = Typography;
 type ViewMode = 'list' | 'grid'
 
 const Tasks: React.FC = () => {
-    const navigate = useNavigate()
-    const { tasks, isLoading } = useTasks()
+    const { tasks, isLoading, createTask } = useTasks()
     const [ViewMode, setViewMode] = useState<ViewMode>('grid')
+    const [modalOpen, setModalOpen] = useState(false)
+    const handleCreate = async (data: CreateTaskRequest | UpdateTaskRequest) => {
+        createTask.mutate(data as CreateTaskRequest, {
+            onSuccess: () => {
+                setModalOpen(false)
+            },
+            onError: () => {
+                message.error('Failed to create task.')
+            },
+        })
+    }
 
     return (
         <div>
@@ -37,13 +47,14 @@ const Tasks: React.FC = () => {
                             </Radio.Button>
                         </Radio.Group>
 
-                        <Button variant='primary' size='md' rounded='md' icon={<PlusOutlined />} onClick={() => navigate('/tasks/new')}>
+                        <Button variant='primary' size='md' rounded='md' icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
                             Add Task
                         </Button>
                     </Space>
                 </div>
             </div>
             <TaskList tasks={tasks || []} isLoading={isLoading} viewMode={ViewMode} />
+            <TaskForm visible={modalOpen} onCancel={() => setModalOpen(false)} onSubmit={handleCreate} isLoading={createTask.isPending} />
         </div>
     )
 };

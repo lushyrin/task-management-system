@@ -1,37 +1,43 @@
 import { useState } from 'react';
-import { Typography, Spin, message } from 'antd';
-import { KanbanBoard } from '@/components/organisms';
-import { useTasks } from '@/hooks/useTasks';
-import type { TaskStatus } from '@/types';
+import { useQuery } from '@tanstack/react-query';
+import { Space, Alert, Spin, Typography, message } from 'antd';
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { taskService } from '@/services/task.service';
+import { QUERY_KEYS } from '@/utils/constants';
+import KanbanBoard from '@/components/organisms/KanbanBoard';
+import { TaskForm } from '@/components/organisms';
+import { useCreateTask } from '@/hooks/useTasks';
+import Button from '@/components/atoms/Button';
+import type { CreateTaskRequest, UpdateTaskRequest } from '@/types';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const Kanban: React.FC = () => {
-    const { tasks, isLoading, updateTask } = useTasks();
-    const [updating, setUpdating] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const createTask = useCreateTask();
 
-    const handleTaskMove = async (taskId: string, newStatus: TaskStatus, newOrder: number) => {
-        if (updating) return;
+    const {
+        data: tasks = [],
+        isLoading,
+        isError,
+        error,
+        refetch,
+    } = useQuery({
+        queryKey: [QUERY_KEYS.TASKS.ALL],
+        queryFn: taskService.getAll,
+        staleTime: 30_000,
+    });
 
-        setUpdating(true);
-        try {
-            await updateTask.mutateAsync({
-                id: taskId,
-                data: { status: newStatus, order: newOrder }
-            });
-
-            const statusMessages: Record<TaskStatus, string> = {
-                not_started: 'Task moved to Not Started',
-                in_progress: 'Task moved to In Progress',
-                done: 'Task completed',
-            };
-            message.success(statusMessages[newStatus]);
-        } catch (error) {
-            message.error('Failed to move task');
-        } finally {
-            setUpdating(false);
-        }
-    };
+    const handleCreate = async (data: CreateTaskRequest | UpdateTaskRequest) => {
+        createTask.mutate(data as CreateTaskRequest, {
+            onSuccess: () => {
+                setModalOpen(false)
+            },
+            onError: () => {
+                message.error('Failed to create task.')
+            },
+        })
+    }
 
     if (isLoading) {
         return (
@@ -41,37 +47,52 @@ const Kanban: React.FC = () => {
         );
     }
 
+    if (isError) {
+        return (
+            <div style={{ padding: '24px' }}>
+                <Alert
+                    type="error"
+                    showIcon
+                    message="Failed to load tasks"
+                    description={(error as Error)?.message ?? 'Unknown error'}
+                    action={
+                        <Button size="sm" icon={<ReloadOutlined />} onClick={() => refetch()}>
+                            Retry
+                        </Button>
+                    }
+                />
+            </div >
+        )
+    }
+
     return (
         <div>
             {/* Page Header */}
             <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                    <Title
-                        level={2}
-                        style={{
-                            margin: 0,
-                            fontSize: '1.75rem',
-                            fontWeight: 700,
-                            color: '#171717',
-                            letterSpacing: '-0.02em',
-                        }}
-                    >
-                        Kanban Board
-                    </Title>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                    <div>
+                        <Title
+                            level={2}
+                            style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: '#171717', letterSpacing: '-0.02em', }}>
+                            Kanban Board
+                        </Title>
+                        <Text type="secondary" style={{ fontSize: 13 }}>
+                            {tasks.length} task{tasks.length !== 1 ? 's' : ''} · drag cards to update status
+                        </Text>
+                    </div>
+                    <Space size='middle'>
+                        <Button variant='primary' size='md' rounded='md' icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+                            Add Task
+                        </Button>
+                    </Space>
                 </div>
-                <p style={{
-                    margin: 0,
-                    color: '#737373',
-                    fontSize: '0.95rem',
-                }}>
-                    Drag and drop tasks to organize your workflow
-                </p>
             </div>
-
-            {/* Kanban Board */}
-            <KanbanBoard
-                tasks={tasks || []}
-                onTaskMove={handleTaskMove}
+            <KanbanBoard tasks={tasks} />
+            <TaskForm
+                visible={modalOpen}
+                onCancel={() => setModalOpen(false)}
+                onSubmit={handleCreate}
+                isLoading={createTask.isPending}
             />
         </div>
     );

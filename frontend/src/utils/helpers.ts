@@ -1,6 +1,4 @@
-/**
- * Format a date string to relative time (e.g., "2 hours ago")
- */
+
 export const formatDistanceToNow = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
@@ -34,9 +32,6 @@ export const formatDistanceToNow = (dateString: string): string => {
     return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
 };
 
-/**
- * Format date to locale string
- */
 export const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
