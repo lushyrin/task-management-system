@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Checkbox, Divider, Typography, Alert, Space } from 'antd';
-import { UserOutlined, LockOutlined, GoogleOutlined, AppleFilled } from '@ant-design/icons';
+import { Form, Input, Button, Checkbox, Typography, Alert } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthContext } from '@/context/AuthContext';
 const { Title, Text, Link } = Typography;
 
@@ -35,9 +35,6 @@ const Login = () => {
         }
     };
 
-    const handleSocialLogin = (provider: 'google' | 'apple') => {
-        console.log(`Login with ${provider}`);
-    };
 
     return (
         <>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Checkbox, Divider, Typography, Alert, Space } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined, GoogleOutlined, AppleFilled } from '@ant-design/icons';
+import { Form, Input, Button, Checkbox, Typography, Alert } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuthContext } from '@/context/AuthContext';
 
 const { Title, Text, Link } = Typography;
@@ -39,15 +39,11 @@ const Register = () => {
         }
     };
 
-    const handleSocialRegister = (provider: 'google' | 'apple') => {
-        console.log(`Sign up with ${provider}`);
-        // TODO: Implement social login
-    };
 
     return (
         <>
             <div className="mb-8">
-                <Title level={2} className="!mb-2">
+                <Title level={2} className="mb-2!">
                     Create Account
                 </Title>
                 <Text type="secondary">
