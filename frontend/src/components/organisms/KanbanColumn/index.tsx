@@ -43,9 +43,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                 borderRadius: '12px',
                 padding: '14px',
                 border: '1px solid #e5e5e5',
-            }}
-        >
-            {/* Column Header */}
+            }}>
             <div
                 className="kanban-column-header"
                 style={{
@@ -85,6 +83,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                             fontSize: '11px',
                             fontWeight: 600,
                             boxShadow: 'none',
+                            marginLeft: '8px'
                         }}
                     />
                 </Text>

@@ -49,7 +49,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             className="animate-fade-in"
             style={{ display: 'flex', gap: '12px', padding: '10px 0', width: '100%' }}
         >
-            {/* Avatar */}
             <Avatar
                 size={32}
                 icon={<UserOutlined />}
@@ -58,9 +57,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 {comment.user?.username?.charAt(0).toUpperCase()}
             </Avatar>
 
-            {/* Content */}
             <div style={{ flex: 1, minWidth: 0 }}>
-                {/* Username + time */}
                 <Space size={8} style={{ marginBottom: 4 }}>
                     <Text strong style={{ fontSize: '0.8rem', color: '#171717' }}>
                         {comment.user?.username || 'Unknown'}
@@ -71,7 +68,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                     </Text>
                 </Space>
 
-                {/* Comment text or textarea edit */}
                 {isEditing ? (
                     <div style={{ width: '100%' }}>
                         <TextArea
@@ -97,7 +93,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 )}
             </div>
 
-            {/* 3-dot menu — only for owner */}
             {isOwner && !isEditing && (
                 <Dropdown
                     menu={{ items: dropdownItems }}

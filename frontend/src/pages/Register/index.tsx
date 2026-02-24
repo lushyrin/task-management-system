@@ -171,31 +171,6 @@ const Register = () => {
                 </Form.Item>
             </Form>
 
-            <Divider>
-                <Text type="secondary" className="text-xs">
-                    Or sign up with
-                </Text>
-            </Divider>
-
-            <Space className="w-full" size="middle">
-                <Button
-                    block
-                    size="large"
-                    icon={<GoogleOutlined />}
-                    onClick={() => handleSocialRegister('google')}
-                >
-                    Google
-                </Button>
-                <Button
-                    block
-                    size="large"
-                    icon={<AppleFilled />}
-                    onClick={() => handleSocialRegister('apple')}
-                >
-                    Apple
-                </Button>
-            </Space>
-
             <div className="mt-6 text-center">
                 <Text type="secondary">
                     Already have an account?{' '}

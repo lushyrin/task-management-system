@@ -1,9 +1,11 @@
-import { Card, Typography, Space, Avatar, Tooltip, Popconfirm } from 'antd';
-import { MessageOutlined, ClockCircleOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Typography, Space, Avatar, Tooltip, Dropdown, Modal } from 'antd';
+import { MessageOutlined, ClockCircleOutlined, UserOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { StatusBadge } from '@/components/atoms';
 import type { Task } from '@/types';
 import { formatDistanceToNow } from '@/utils/helpers';
 import { useDeletetask } from '@/hooks/useTasks';
+import { useNavigate } from 'react-router-dom';
+
 
 const { Text } = Typography;
 
@@ -14,11 +16,33 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
     const deleteTask = useDeletetask();
+    const navigate = useNavigate();
 
-    const handleDelete = (e?: React.MouseEvent) => {
-        e?.stopPropagation(); // prevent card click/navigate
-        deleteTask.mutate(task.id);
+    const handleDelete = () => {
+        Modal.confirm({
+            title: 'Delete task',
+            content: 'Are you sure you want to delete this task?',
+            okText: 'Delete',
+            okButtonProps: { danger: true, loading: deleteTask.isPending },
+            cancelText: 'Cancel',
+            onOk: () => deleteTask.mutate(task.id),
+        });
     };
+    const dropdownItems = [
+        {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Edit',
+            onClick: () => navigate(`/tasks/${task.id}`),
+        },
+        {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Delete',
+            danger: true,
+            onClick: handleDelete,
+        },
+    ];
     return (
         <Card
             hoverable
@@ -27,37 +51,28 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
             bodyStyle={{ padding: 16 }}>
             <Space direction="vertical" className="w-full" size={8}>
                 {/* Status Badge */}
-                <div className='flex items-center justify-between w-full'>
+                <div className="flex items-center justify-between w-full">
                     <StatusBadge status={task.status} />
-                    <Popconfirm
-                        title="Delete task"
-                        description="Are you sure you want to delete this task?"
-                        onConfirm={handleDelete}
-                        onPopupClick={(e) => e.stopPropagation()}
-                        okText="Delete"
-                        okButtonProps={{ danger: true, loading: deleteTask.isPending }}
-                        cancelText="Cancel"
-                        placement="topRight"
-                    >
-                        <Tooltip title="Delete task">
-                            <div
-                                onClick={(e) => e.stopPropagation()}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: 4,
-                                    cursor: 'pointer',
-                                    color: '#c70000',
-                                    transition: 'all 0.15s',
-                                }}
-                                className="hover:bg-red-50 hover:text-red-400">
-                                <DeleteOutlined style={{ fontSize: 13 }} />
-                            </div>
-                        </Tooltip>
-                    </Popconfirm>
+
+                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight" >
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 24,
+                                height: 24,
+                                borderRadius: 4,
+                                cursor: 'pointer',
+                                color: '#a3a3a3',
+                                transition: 'all 0.15s',
+                            }}
+                            className="hover:bg-gray-100"
+                        >
+                            <EllipsisOutlined style={{ fontSize: 16 }} />
+                        </div>
+                    </Dropdown>
                 </div>
 
                 {/* Title */}

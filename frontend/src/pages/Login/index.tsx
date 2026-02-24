@@ -119,31 +119,6 @@ const Login = () => {
                 </Form.Item>
             </Form>
 
-            <Divider>
-                <Text type="secondary" className="text-xs">
-                    Or continue with
-                </Text>
-            </Divider>
-
-            <Space className="w-full" size="middle">
-                <Button
-                    block
-                    size="large"
-                    icon={<GoogleOutlined />}
-                    onClick={() => handleSocialLogin('google')}
-                >
-                    Google
-                </Button>
-                <Button
-                    block
-                    size="large"
-                    icon={<AppleFilled />}
-                    onClick={() => handleSocialLogin('apple')}
-                >
-                    Apple
-                </Button>
-            </Space>
-
             <div className="mt-6 text-center">
                 <Text type="secondary">
                     Don't have an account?{' '}

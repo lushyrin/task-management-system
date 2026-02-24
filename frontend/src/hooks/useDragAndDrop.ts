@@ -17,7 +17,7 @@ interface ColumnData {
 const COLUMN_DEF: { id: TaskStatus; title: string }[] = [
     { id: 'not_started', title: "Not Started" },
     { id: 'in_progress', title: 'In Proress' },
-    { id: 'done', title: 'DOone' }
+    { id: 'done', title: 'Done' }
 ]
 
 const STATUS_MESSAGES: Record<TaskStatus, string> = {
