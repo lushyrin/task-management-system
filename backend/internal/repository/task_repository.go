@@ -1,12 +1,10 @@
 package repository
 
 import (
-	// "fmt"
 	"gorm.io/gorm"
 	"minitask/internal/models"
 )
 
-// komuikasi lngsung ke db
 type TaskRepository interface {
 	Create(task *models.Task) error
 	FindByID(id string) (*models.Task, error)
@@ -18,6 +16,9 @@ type TaskRepository interface {
 	Delete(id, userID string) error
 	CountByUserID(userID string) (int64, error)
 	CountByStatus(userID, status string) (int64, error)
+
+	FindAllByWorkspaceID(workspaceID string) ([]models.Task, error)
+	FindByWorkspaceAndTaskID(workspaceID, taskID string) (*models.Task, error)
 }
 
 type taskRepository struct {
@@ -33,23 +34,22 @@ func (r *taskRepository) Create(task *models.Task) error {
 	if err != nil {
 		return err
 	}
-	// fmt.Printf("DEBUG: Task created with UserID: %s\n", task.UserID)
-	//load task n user data ke variable baru, apperently gabisa reuse variable sama buat loading
 	var createdTask models.Task
-	err = r.db.Preload("User").First(&createdTask, "id = ?", task.ID).Error
+	err = r.db.Preload("User").Preload("Assignee").First(&createdTask, "id = ?", task.ID).Error
 	if err != nil {
 		return err
 	}
-	// fmt.Printf("DEBUG: Fetched user: %+v\n", createdTask.User)
 	*task = createdTask
 	return nil
 }
 
 func (r *taskRepository) FindByID(id string) (*models.Task, error) {
 	var task models.Task
-	err := r.db.Preload("User").Preload("Comments", func(db *gorm.DB) *gorm.DB {
+	err := r.db.
+		Preload("User").Preload("Assignee").Preload("Comments", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("User")
-	}).First(&task, "id = ? ", id).Error
+	}).
+		First(&task, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +58,10 @@ func (r *taskRepository) FindByID(id string) (*models.Task, error) {
 
 func (r *taskRepository) FindByIDAndUserID(id, userID string) (*models.Task, error) {
 	var task models.Task
-	err := r.db.Preload("User").Preload("Comments", func(db *gorm.DB) *gorm.DB {
+	err := r.db.Preload("User").Preload("Assignee").Preload("Comments", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("User")
-	}).First(&task, "id = ? AND user_id = ? ", id, userID).Error
+	}).
+		First(&task, "id = ? AND user_id = ? AND workspace_id IS NULL", id, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +70,9 @@ func (r *taskRepository) FindByIDAndUserID(id, userID string) (*models.Task, err
 
 func (r *taskRepository) FindAllByUserID(userID string) ([]models.Task, error) {
 	var tasks []models.Task
-	err := r.db.Preload("User").Preload("Comments", func(db *gorm.DB) *gorm.DB {
+	err := r.db.Preload("User").Preload("Assignee").Preload("Comments", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("User")
-	}).Where("user_id = ?", userID).Order("\"order\" ASC").Find(&tasks).Error
+	}).Where("user_id = ? AND workspace_id IS NULL", userID).Order("\"order\" ASC").Find(&tasks).Error
 	return tasks, err
 }
 
@@ -97,12 +98,43 @@ func (r *taskRepository) Delete(id, userID string) error {
 
 func (r *taskRepository) CountByUserID(userID string) (int64, error) {
 	var count int64
-	err := r.db.Model(&models.Task{}).Where("user_id = ?", userID).Count(&count).Error
+	err := r.db.Model(&models.Task{}).Where("user_id = ? AND workspace_id IS NULL", userID).Count(&count).Error
 	return count, err
 }
 
 func (r *taskRepository) CountByStatus(userID, status string) (int64, error) {
 	var count int64
-	err := r.db.Model(&models.Task{}).Where("user_id = ? AND status = ?", userID, status).Count(&count).Error
+	err := r.db.Model(&models.Task{}).
+		Where("user_id = ? AND status = ? AND workspace_id IS NULL", userID, status).
+		Count(&count).Error
 	return count, err
+}
+
+func (r *taskRepository) FindAllByWorkspaceID(workspaceID string) ([]models.Task, error) {
+	var tasks []models.Task
+	err := r.db.
+		Preload("User").
+		Preload("Assignee").
+		Preload("Comments", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("User")
+		}).
+		Where("workspace_id = ?", workspaceID).
+		Order("\"order\" ASC").
+		Find(&tasks).Error
+	return tasks, err
+}
+
+func (r *taskRepository) FindByWorkspaceAndTaskID(workspaceID, taskID string) (*models.Task, error) {
+	var task models.Task
+	err := r.db.
+		Preload("User").
+		Preload("Assignee").
+		Preload("Comments", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("User")
+		}).
+		First(&task, "id = ? AND workspace_id = ?", taskID, workspaceID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
 }
