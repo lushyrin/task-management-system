@@ -15,49 +15,49 @@ import (
 )
 
 func main() {
-	// Initialize database connection
 	db := database.InitDB()
 
-	// Auto-migrate the tables
 	fmt.Println("Running migrations...")
-	err := db.AutoMigrate(&models.User{}, &models.Task{}, &models.Comment{})
+	err := db.AutoMigrate(
+		&models.User{},
+		&models.Task{},
+		&models.Comment{},
+		&models.Workspace{},
+		&models.WorkspaceMember{},
+	)
 	if err != nil {
 		panic("Failed to migrate tables: " + err.Error())
 	}
 	fmt.Println("Tables created/migrated successfully!")
 
-	// Initialize repositories
+	// Repositories
 	userRepo := repository.NewUserRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
+	workspaceRepo := repository.NewWorkspaceRepository(db)
 
-	// Initialize services
+	// Services
 	authService := service.NewAuthService(db, userRepo)
 	taskService := service.NewTaskService(db, taskRepo)
 	commentService := service.NewCommentService(db, commentRepo, taskRepo)
+	workspaceService := service.NewWorkspaceService(db, workspaceRepo, taskRepo, userRepo)
 
-	// For future: services can use repositories
-	_ = userRepo // userRepo akan digunakan ketika auth_service direfactor
-
-	// Initialize handlers
+	// Handlers
 	authHandler := handler.NewAuthHandler(authService)
 	taskHandler := handler.NewTaskHandler(taskService)
 	commentHandler := handler.NewCommentHandler(commentService)
+	workspaceHandler := handler.NewWorkspaceHandler(workspaceService)
 
-	// Initialize Echo
 	e := echo.New()
 
-	// Setup router
-	r := router.NewRouter(authHandler, taskHandler, commentHandler)
+	r := router.NewRouter(authHandler, taskHandler, commentHandler, workspaceHandler)
 	r.Setup(e)
 
-	// Get port from environment or use default
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// Start server
 	log.Printf("Server starting on port %s", port)
 	if err := e.Start(":" + port); err != nil {
 		log.Fatal("Failed to start server: ", err)
