@@ -8,6 +8,7 @@ export type {
 export type {
     Task,
     TaskStatus,
+    TaskPriority,
     TaskStats,
     CreateTaskRequest,
     UpdateTaskRequest,
@@ -19,3 +20,14 @@ export type {
     CreateCommentRequest,
     UpdateCommentRequest,
 } from './comment'
+
+export type {
+    Workspace,
+    WorkspaceRole,
+    WorkspaceMember,
+    CreateWorkspacePayload,
+    UpdateWorkspacePayload,
+    JoinWorkspacePayload,
+    CreateWorkspaceTaskPayload,
+    AssignTaskPayload,
+} from './workspace'

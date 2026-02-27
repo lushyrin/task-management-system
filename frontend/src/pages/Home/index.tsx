@@ -78,9 +78,6 @@ const Home = () => {
 
             <div className="min-h-[calc(100vh-64px)] flex">
                 <div className="hidden lg:block flex-1 relative overflow-hidden bg-white" >
-                    {/* <div className="absolute top-20 left-10 w-40 h-40 bg-yellow-300/40 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-20 right-10 w-56 h-56 bg-orange-300/30 rounded-full blur-3xl" style={{ animation: 'pulse 4s ease-in-out infinite' }}></div>
-                    <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-pink-300/20 rounded-full blur-3xl" style={{ animation: 'pulse 3s ease-in-out infinite 1s' }}></div> */}
 
                     <div
                         className="absolute top-16 right-16 w-16 h-16 rounded shadow-lg transform rotate-12"
@@ -97,7 +94,6 @@ const Home = () => {
 
                     <div className="absolute inset-0 flex items-center justify-center p-8">
                         <div className="space-y-4 w-full max-w-sm">
-                            {/*don*/}
                             <Card
                                 className="transform -rotate-3 hover:shadow-xl transition-shadow"
                                 bodyStyle={{ padding: 20 }}
@@ -145,7 +141,6 @@ const Home = () => {
                                 </Space>
                             </Card>
 
-                            {/*ip*/}
                             <Card
                                 className="transform rotate-2 hover:shadow-xl transition-shadow"
                                 bodyStyle={{ padding: 20 }}
@@ -193,7 +188,6 @@ const Home = () => {
                                 </Space>
                             </Card>
 
-                            {/*ns*/}
                             <Card
                                 className="transform -rotate-1 hover:shadow-xl transition-shadow"
                                 bodyStyle={{ padding: 20 }}

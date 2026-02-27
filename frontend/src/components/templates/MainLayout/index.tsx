@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { Navbar } from '../../organisms';
+import { Sidebar } from '../../organisms';
 
 const MainLayout = () => {
     return (
@@ -7,14 +7,15 @@ const MainLayout = () => {
             style={{
                 minHeight: '100vh',
                 background: '#fafafa',
+                display: 'flex',
             }}
         >
-            <Navbar />
+            <Sidebar />
             <main 
                 style={{
-                    maxWidth: '1200px',
-                    margin: '0 auto',
+                    flex: 1,
                     padding: '24px',
+                    overflow: 'auto',
                 }}
             >
                 <Outlet />

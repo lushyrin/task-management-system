@@ -50,7 +50,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
             onClick={() => onClick?.(task)}
             bodyStyle={{ padding: 16 }}>
             <Space direction="vertical" className="w-full" size={8}>
-                {/* Status Badge */}
                 <div className="flex items-center justify-between w-full">
                     <StatusBadge status={task.status} />
 
@@ -75,22 +74,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                     </Dropdown>
                 </div>
 
-                {/* Title */}
                 <Text strong className="task-card-title block">
                     {task.title}
                 </Text>
 
-                {/* Description */}
                 {task.description && (
                     <Text type="secondary" className="task-card-description block">
                         {task.description}
                     </Text>
                 )}
 
-                {/* Footer */}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                     <Space size={12}>
-                        {/* User Avatar */}
                         <Tooltip title={task.user?.username || 'Unknown'}>
                             <Avatar
                                 size="small"
@@ -101,7 +96,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                             </Avatar>
                         </Tooltip>
 
-                        {/* Comments Count */}
                         {task.comments && task.comments.length > 0 && (
                             <Space size={4} className="text-gray-400">
                                 <MessageOutlined />
@@ -112,7 +106,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                         )}
                     </Space>
 
-                    {/* Created Time */}
                     <Space size={4} className="text-gray-400">
                         <ClockCircleOutlined className="text-xs" />
                         <Text type="secondary" className="text-xs">

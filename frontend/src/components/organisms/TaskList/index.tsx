@@ -27,12 +27,10 @@ const TaskList: React.FC<TaskListProps> = ({
     const [pageSize, setPageSize] = useState(10);
     const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
 
-    // Filter tasks by status
     const filteredTasks = statusFilter === 'all'
         ? tasks
         : tasks.filter(task => task.status === statusFilter);
 
-    // Pagination
     const total = filteredTasks.length;
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -42,7 +40,6 @@ const TaskList: React.FC<TaskListProps> = ({
         navigate(`/tasks/${task.id}`);
     };
 
-    // Table columns definition
     const columns = [
         {
             title: 'Status',
@@ -128,7 +125,6 @@ const TaskList: React.FC<TaskListProps> = ({
 
     return (
         <div className="space-y-4">
-            {/* Filters */}
             <div className="flex items-center justify-between mb-4">
                 <Text type="secondary">
                     Showing {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
@@ -148,7 +144,6 @@ const TaskList: React.FC<TaskListProps> = ({
                 </Space>
             </div>
 
-            {/* Task List - Grid or Table View */}
             {viewMode === 'list' ? (
                 <Table
                     dataSource={paginatedTasks}
@@ -186,7 +181,6 @@ const TaskList: React.FC<TaskListProps> = ({
                 />
             )}
 
-            {/* Pagination */}
             {total > pageSize && (
                 <div className="flex justify-center pt-4">
                     <Pagination

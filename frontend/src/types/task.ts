@@ -13,6 +13,9 @@ export interface Task {
     order: number;
     userId: string;
     user?: User;
+    workspaceId?: string | null;
+    assigneeId?: string | null;
+    assignee?: User | null;
     comments?: Comment[]
     createdAt: string;
     updatedAt: string;

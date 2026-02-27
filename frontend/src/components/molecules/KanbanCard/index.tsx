@@ -6,16 +6,15 @@ import type { KanbanCardProps } from './KanbanCard.types.ts';
 
 const { Text } = Typography;
 
-// Modern Post-it note colors - soft gradients
 const cardColors = [
-    { bg: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)', label: 'yellow' },    // Yellow
-    { bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)', label: 'pink' },      // Pink
-    { bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'orange' },   // Orange
-    { bg: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)', label: 'green' },     // Green
-    { bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'orange' },    // Orange
-    { bg: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)', label: 'purple' },    // Purple
-    { bg: 'linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)', label: 'teal' },      // Teal
-    { bg: 'linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%)', label: 'coral' },     // Coral
+    { bg: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)', label: 'yellow' },
+    { bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)', label: 'pink' },
+    { bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'orange' },
+    { bg: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)', label: 'green' },
+    { bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'orange' },
+    { bg: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)', label: 'purple' },
+    { bg: 'linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)', label: 'teal' },
+    { bg: 'linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%)', label: 'coral' },
 ];
 
 const KanbanCard: React.FC<KanbanCardProps> = ({
@@ -25,18 +24,15 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
 }) => {
     const navigate = useNavigate();
 
-    // Deterministic color based on task id
     const colorIndex = parseInt(task.id.slice(-1), 16) % cardColors.length;
     const color = cardColors[colorIndex];
 
-    // Status labels
     const statusLabel = {
         not_started: 'Not Started',
         in_progress: 'In Progress',
         done: 'Done',
     };
 
-    // Priority colors for badge
     const priorityConfig = {
         high: { bg: '#fee2e2', color: '#dc2626', label: 'High' },
         medium: { bg: '#fef3c7', color: '#d97706', label: 'Medium' },
@@ -65,10 +61,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             }}
         >
             <Space direction="vertical" className="w-full" size={10}>
-                {/* Header with status and drag handle */}
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                        {/* Status indicator */}
                         <Tooltip title={statusLabel[task.status]}>
                             <span
                                 style={{
@@ -84,7 +78,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                             />
                         </Tooltip>
 
-                        {/* Priority badge */}
                         {priority && (
                             <span
                                 style={{
@@ -104,7 +97,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                         )}
                     </div>
 
-                    {/* Drag handle */}
                     <div
                         {...dragHandleProps}
                         className="cursor-grab active:cursor-grabbing p-1 hover:bg-black/5 rounded transition-colors"
@@ -114,7 +106,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                     </div>
                 </div>
 
-                {/* Title */}
                 <Text
                     strong
                     style={{
@@ -128,7 +119,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                     {task.title}
                 </Text>
 
-                {/* Description preview */}
                 {task.description && (
                     <Text
                         type="secondary"
@@ -139,7 +129,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                             color: '#525252',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            // display: 'webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                         }}
@@ -148,7 +137,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                     </Text>
                 )}
 
-                {/* Footer */}
                 <div
                     className="flex items-center justify-between pt-2"
                     style={{
@@ -157,7 +145,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                     }}
                 >
                     <Space size={8}>
-                        {/* User Avatar */}
                         <Tooltip title={task.user?.username || 'Unknown'}>
                             <Avatar
                                 size="small"
@@ -174,7 +161,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                             </Avatar>
                         </Tooltip>
 
-                        {/* Comments Count */}
                         {task.comments && task.comments.length > 0 && (
                             <Space size={2} style={{ color: '#737373' }}>
                                 <MessageOutlined style={{ fontSize: 12 }} />
@@ -191,7 +177,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                         )}
                     </Space>
 
-                    {/* Created Time */}
                     <Text
                         type="secondary"
                         style={{

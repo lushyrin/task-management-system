@@ -67,7 +67,6 @@ const Kanban: React.FC = () => {
 
     return (
         <div>
-            {/* Page Header */}
             <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                     <div>

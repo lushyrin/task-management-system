@@ -5,13 +5,14 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { AuthLayout, MainLayout } from '../components/templates';
 import { useAuth } from '../hooks/useAuth';
 
-// Lazy load pages for better performance
 const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
 const Tasks = lazy(() => import('../pages/Tasks'));
 const TaskDetail = lazy(() => import('../pages/TaskDetail'));
 const Kanban = lazy(() => import('../pages/Kanban'));
+const WorkspacePage = lazy(() => import('../pages/WorkspacePage'));
+const WorkspaceSettings = lazy(() => import('../pages/WorkspaceSettings'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 // Fast loading spinner component
@@ -125,6 +126,22 @@ export const routes = createBrowserRouter([
                     {
                         path: '/dashboard',
                         element: <Navigate to="/tasks" replace />,
+                    },
+                    {
+                        path: '/workspace/:id',
+                        element: (
+                            <PageWrapper>
+                                <WorkspacePage />
+                            </PageWrapper>
+                        ),
+                    },
+                    {
+                        path: '/workspace/:id/settings',
+                        element: (
+                            <PageWrapper>
+                                <WorkspaceSettings />
+                            </PageWrapper>
+                        ),
                     },
                 ],
             },

@@ -5,3 +5,4 @@ export { default as Tasks } from './Tasks';
 export { default as TaskDetail } from './TaskDetail';
 export { default as Kanban } from './Kanban';
 export { default as NotFound } from './NotFound';
+export { default as WorkspacePage } from './WorkspacePage'
