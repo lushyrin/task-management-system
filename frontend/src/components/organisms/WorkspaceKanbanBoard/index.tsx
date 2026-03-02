@@ -2,29 +2,30 @@ import { useCallback } from 'react';
 import { DragDropContext, type OnDragStartResponder } from '@hello-pangea/dnd';
 import KanbanColumn from '../KanbanColumn';
 import { DragDropProvider, useDragDropContext } from '@/context/DragDropContext';
-import { useDragAndDrop } from '@/hooks/useDragAndDrop';
-import { taskService } from '@/services/task.service';
+import { useWorkspaceDragAndDrop } from '@/hooks/useWorkspaceDragAndDrop';
+import { workspaceService } from '@/services/workspace.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import type { Task } from '@/types';
 
-interface KanbanBoardProps {
+interface WorkspaceKanbanBoardProps {
     tasks: Task[];
+    workspaceId: string;
 }
 
-const TASKS_QUERY_KEY = ['tasks'];
+const WORKSPACE_TASKS_KEY = (id: string) => ['workspaces', id, 'tasks'];
 
-const BoardInner: React.FC<KanbanBoardProps> = ({ tasks }) => {
+const BoardInner: React.FC<WorkspaceKanbanBoardProps> = ({ tasks, workspaceId }) => {
     const { setDragState } = useDragDropContext();
-    const { columns, onDragEnd } = useDragAndDrop(tasks);
+    const { columns, onDragEnd } = useWorkspaceDragAndDrop(tasks, workspaceId);
     const queryClient = useQueryClient();
 
     // Update task mutation
     const updateMutation = useMutation({
         mutationFn: ({ taskId, data }: { taskId: string; data: { title?: string; description?: string } }) =>
-            taskService.update(taskId, data),
+            workspaceService.updateTask(workspaceId, taskId, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: WORKSPACE_TASKS_KEY(workspaceId) });
             message.success('Task updated');
         },
         onError: (error: Error) => {
@@ -34,9 +35,9 @@ const BoardInner: React.FC<KanbanBoardProps> = ({ tasks }) => {
 
     // Delete task mutation
     const deleteMutation = useMutation({
-        mutationFn: (taskId: string) => taskService.delete(taskId),
+        mutationFn: (taskId: string) => workspaceService.deleteTask(workspaceId, taskId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: WORKSPACE_TASKS_KEY(workspaceId) });
             message.success('Task deleted');
         },
         onError: (error: Error) => {
@@ -79,6 +80,7 @@ const BoardInner: React.FC<KanbanBoardProps> = ({ tasks }) => {
                         droppableId={column.id}
                         onUpdateTask={handleUpdateTask}
                         onDeleteTask={handleDeleteTask}
+                        workspaceId={workspaceId}
                     />
                 ))}
             </div>
@@ -87,10 +89,10 @@ const BoardInner: React.FC<KanbanBoardProps> = ({ tasks }) => {
 };
 
 // Outer wrapper provides the context to BoardInner
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => (
+const WorkspaceKanbanBoard: React.FC<WorkspaceKanbanBoardProps> = ({ tasks, workspaceId }) => (
     <DragDropProvider>
-        <BoardInner tasks={tasks} />
+        <BoardInner tasks={tasks} workspaceId={workspaceId} />
     </DragDropProvider>
 );
 
-export default KanbanBoard;
+export default WorkspaceKanbanBoard;

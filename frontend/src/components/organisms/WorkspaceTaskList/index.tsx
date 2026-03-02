@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Button, Form, Input, Modal, Select, Empty, Tag, Avatar, Tooltip, List, Card, Space } from "antd";
-import { PlusOutlined, UserOutlined, CheckCircleOutlined, ClockCircleOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import { Button, Form, Input, Modal, Select, Empty, Tag, Avatar, Tooltip, List, Card, Space, Dropdown, Table } from "antd";
+import { PlusOutlined, UserOutlined, CheckCircleOutlined, ClockCircleOutlined, MinusCircleOutlined, MessageOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useWorkspaceTasks, useCreateWorkspaceTask, useAssignTask } from "../../../hooks/useWorkspace";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "@/utils/helpers";
-import type { Task, Workspace, WorkspaceMember } from "../../../types";
-import type { TaskStatus } from "../../../types";
+import type { Task, Workspace, WorkspaceMember, TaskStatus, TaskPriority } from "../../../types";
 
 const colors = {
     text: '#171717',
     textMuted: '#737373',
-    accent: '#eab308',
+    accent: '#eab308',      // Yellow - workspace brand color
+    accentLight: '#fef9c3', // Light yellow
     border: '#e5e5e5',
     bg: '#fafafa',
     bgHover: '#f5f5f5',
@@ -22,7 +22,7 @@ const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; 
     done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
 };
 
-const PRIORITY_CONFIG = {
+const PRIORITY_CONFIG: Record<TaskPriority, { bg: string; color: string; label: string }> = {
     high: { bg: '#fee2e2', color: '#dc2626', label: 'High' },
     medium: { bg: '#fef3c7', color: '#d97706', label: 'Medium' },
     low: { bg: '#ecfdf5', color: '#059669', label: 'Low' },
@@ -101,11 +101,39 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                             dataSource={tasks}
                             renderItem={(task: Task) => {
                                 const statusConfig = STATUS_CONFIG[task.status];
+                                const commentCount = task.comments?.length || task.commentCount || 0;
+                                
+                                const dropdownItems = [
+                                    {
+                                        key: 'edit',
+                                        icon: <EditOutlined />,
+                                        label: 'Edit',
+                                        onClick: () => navigate(`/tasks/${task.id}?workspace=${workspace.id}`),
+                                    },
+                                    {
+                                        key: 'delete',
+                                        icon: <DeleteOutlined />,
+                                        label: 'Delete',
+                                        danger: true,
+                                        onClick: () => {
+                                            // Handle delete - you may want to add a mutation for this
+                                            Modal.confirm({
+                                                title: 'Delete task',
+                                                content: 'Are you sure you want to delete this task?',
+                                                okText: 'Delete',
+                                                okButtonProps: { danger: true },
+                                                cancelText: 'Cancel',
+                                                onOk: () => console.log('Delete task', task.id),
+                                            });
+                                        },
+                                    },
+                                ];
+                                
                                 return (
                                     <List.Item style={{ height: '100%' }}>
                                         <Card
                                             hoverable
-                                            onClick={() => navigate(`/tasks/${task.id}`)}
+                                            onClick={() => navigate(`/tasks/${task.id}?workspace=${workspace.id}`)}
                                             style={{
                                                 borderRadius: 12,
                                                 border: `1px solid ${colors.border}`,
@@ -116,22 +144,44 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                             styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column', height: '100%' } }}
                                         >
 
-                                            <div className="flex items-center gap-2 mb-3 flex-wrap">
-                                                <Tag color={statusConfig.color} icon={statusConfig.icon}>
-                                                    {statusConfig.label}
-                                                </Tag>
-                                                {task.priority && (
-                                                    <span style={{
-                                                        padding: '2px 8px',
-                                                        borderRadius: '4px',
-                                                        fontSize: '11px',
-                                                        fontWeight: 600,
-                                                        background: PRIORITY_CONFIG[task.priority].bg,
-                                                        color: PRIORITY_CONFIG[task.priority].color,
-                                                    }}>
-                                                        {PRIORITY_CONFIG[task.priority].label}
-                                                    </span>
-                                                )}
+                                            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <Tag color={statusConfig.color} icon={statusConfig.icon}>
+                                                        {statusConfig.label}
+                                                    </Tag>
+                                                    {task.priority && (
+                                                        <span style={{
+                                                            padding: '2px 8px',
+                                                            borderRadius: '4px',
+                                                            fontSize: '11px',
+                                                            fontWeight: 600,
+                                                            background: PRIORITY_CONFIG[task.priority].bg,
+                                                            color: PRIORITY_CONFIG[task.priority].color,
+                                                        }}>
+                                                            {PRIORITY_CONFIG[task.priority].label}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                
+                                                <div onClick={(e) => e.stopPropagation()}>
+                                                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
+                                                        <div
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                width: 24,
+                                                                height: 24,
+                                                                borderRadius: 4,
+                                                                cursor: 'pointer',
+                                                                color: '#a3a3a3',
+                                                            }}
+                                                            className="hover:bg-gray-200"
+                                                        >
+                                                            <EllipsisOutlined style={{ fontSize: 16 }} />
+                                                        </div>
+                                                    </Dropdown>
+                                                </div>
                                             </div>
 
                                             <div style={{ flex: 1 }}>
@@ -150,7 +200,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                 style={{ borderTop: `1px solid ${colors.border}` }}
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                <Space size={8}>
+                                                <Space size={12}>
                                                     <Tooltip title={`Created by ${task.user?.username}`}>
                                                         <Avatar size="small" style={{ background: colors.accent, color: '#fff' }}>
                                                             {task.user?.username?.[0]?.toUpperCase()}
@@ -159,6 +209,12 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                     <span style={{ color: colors.textMuted, fontSize: '11px' }}>
                                                         {formatDistanceToNow(task.createdAt)}
                                                     </span>
+                                                    {commentCount > 0 && (
+                                                        <Space size={4} style={{ color: colors.textMuted, fontSize: '11px' }}>
+                                                            <MessageOutlined style={{ fontSize: 12 }} />
+                                                            <span>{commentCount}</span>
+                                                        </Space>
+                                                    )}
                                                 </Space>
 
                                                 {isOwner ? (
@@ -199,74 +255,203 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                             className="py-10"
                         />
                     ) : (
-                        <div className="space-y-2">
-                            {tasks.map((task: Task) => {
-                                const statusConfig = STATUS_CONFIG[task.status];
-                                const priority = task.priority ? PRIORITY_CONFIG[task.priority] : null;
-                                return (
-                                    <div
-                                        key={task.id}
-                                        onClick={() => navigate(`/tasks/${task.id}`)}
-                                        className="rounded-xl px-4 py-3 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer"
-                                        style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
-                                    >
-                                        <Tag color={statusConfig.color} icon={statusConfig.icon} className="!text-xs shrink-0">
-                                            {statusConfig.label}
-                                        </Tag>
-                                        {priority && (
+                        <Table
+                            dataSource={tasks}
+                            rowKey="id"
+                            pagination={false}
+                            scroll={{ x: 'max-content' }}
+                            onRow={(task) => ({
+                                onClick: () => navigate(`/tasks/${task.id}?workspace=${workspace.id}`),
+                                style: { cursor: 'pointer' }
+                            })}
+                            rowClassName="hover:bg-gray-50"
+                            columns={[
+                                {
+                                    title: 'Status',
+                                    dataIndex: 'status',
+                                    width: 130,
+                                    render: (status: TaskStatus) => {
+                                        const config = STATUS_CONFIG[status];
+                                        return (
+                                            <Tag color={config.color} icon={config.icon}>
+                                                {config.label}
+                                            </Tag>
+                                        );
+                                    }
+                                },
+                                {
+                                    title: 'Priority',
+                                    dataIndex: 'priority',
+                                    width: 80,
+                                    render: (priority: TaskPriority | undefined) => {
+                                        if (!priority) return '—';
+                                        const config = PRIORITY_CONFIG[priority];
+                                        return (
                                             <span style={{
-                                                padding: '2px 6px',
+                                                padding: '2px 8px',
                                                 borderRadius: '4px',
-                                                fontSize: '10px',
+                                                fontSize: '11px',
                                                 fontWeight: 600,
-                                                background: priority.bg,
-                                                color: priority.color,
-                                                flexShrink: 0,
+                                                background: config.bg,
+                                                color: config.color,
                                             }}>
-                                                {priority.label}
+                                                {config.label}
                                             </span>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                            <p style={{ color: colors.text, fontWeight: 500 }} className="truncate">{task.title}</p>
+                                        );
+                                    }
+                                },
+                                {
+                                    title: 'Title',
+                                    dataIndex: 'title',
+                                    render: (text: string, task: Task) => (
+                                        <div style={{ minWidth: 200 }}>
+                                            <div style={{ fontWeight: 500, marginBottom: task.description ? 4 : 0, color: colors.text }}>
+                                                {text}
+                                            </div>
                                             {task.description && (
-                                                <p style={{ color: colors.textMuted, fontSize: '0.75rem' }} className="truncate">
+                                                <div style={{ 
+                                                    color: colors.textMuted, 
+                                                    fontSize: '0.75rem',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
                                                     {task.description}
-                                                </p>
+                                                </div>
                                             )}
                                         </div>
-
-                                        <span style={{ color: colors.textMuted, fontSize: '11px', flexShrink: 0 }}>
-                                            {formatDistanceToNow(task.createdAt)}
-                                        </span>
-                                        <Tooltip title={`Created by ${task.user?.username}`}>
-                                            <Avatar size="small" style={{ background: colors.bgHover, color: colors.text, flexShrink: 0 }}>
-                                                {task.user?.username?.[0]?.toUpperCase()}
+                                    )
+                                },
+                                {
+                                    title: 'Comments',
+                                    dataIndex: 'comments',
+                                    width: 90,
+                                    align: 'center' as const,
+                                    render: (_: any, task: Task) => {
+                                        const count = task.comments?.length || task.commentCount || 0;
+                                        return count > 0 ? (
+                                            <Space size={4} style={{ color: colors.textMuted }}>
+                                                <MessageOutlined />
+                                                <span>{count}</span>
+                                            </Space>
+                                        ) : '—';
+                                    }
+                                },
+                                {
+                                    title: 'Created',
+                                    dataIndex: 'createdAt',
+                                    width: 130,
+                                    render: (date: string) => (
+                                        <Space size={4} style={{ color: colors.textMuted }}>
+                                            <ClockCircleOutlined style={{ fontSize: '0.75rem' }} />
+                                            <span style={{ fontSize: '0.875rem' }}>
+                                                {formatDistanceToNow(date)}
+                                            </span>
+                                        </Space>
+                                    )
+                                },
+                                {
+                                    title: 'Creator',
+                                    dataIndex: 'user',
+                                    width: 80,
+                                    align: 'center' as const,
+                                    render: (user: any) => (
+                                        <Tooltip title={user?.username || 'Unknown'}>
+                                            <Avatar 
+                                                size="small" 
+                                                style={{ background: colors.accent, color: '#fff' }}
+                                            >
+                                                {user?.username?.[0]?.toUpperCase()}
                                             </Avatar>
                                         </Tooltip>
-                                        {isOwner ? (
-                                            <Select
-                                                size="small"
-                                                placeholder={<span style={{ color: colors.textMuted }}><UserOutlined /> Assign</span>}
-                                                value={task.assigneeId ?? undefined}
-                                                onChange={(val) => handleAssign(task.id, val ?? null)}
-                                                onClick={(e) => e.stopPropagation()}
-                                                options={memberOptions}
-                                                allowClear
-                                                style={{ width: 140, flexShrink: 0 }}
-                                            />
-                                        ) : task.assignee ? (
-                                            <Tooltip title={`Assigned to ${task.assignee.username}`}>
-                                                <Avatar size="small" style={{ background: colors.accent, color: '#fff', flexShrink: 0 }}>
-                                                    {task.assignee.username?.[0]?.toUpperCase()}
+                                    )
+                                },
+                                {
+                                    title: 'Assignee',
+                                    dataIndex: 'assignee',
+                                    width: 100,
+                                    align: 'center' as const,
+                                    render: (assignee: any, task: Task) => {
+                                        if (isOwner) {
+                                            return (
+                                                <Select
+                                                    size="small"
+                                                    placeholder="Assign"
+                                                    value={task.assigneeId ?? undefined}
+                                                    onChange={(val) => handleAssign(task.id, val ?? null)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    options={memberOptions}
+                                                    allowClear
+                                                    style={{ width: 90 }}
+                                                />
+                                            );
+                                        }
+                                        return assignee ? (
+                                            <Tooltip title={`Assigned to ${assignee.username}`}>
+                                                <Avatar size="small" style={{ background: colors.accent, color: '#fff' }}>
+                                                    {assignee.username?.[0]?.toUpperCase()}
                                                 </Avatar>
                                             </Tooltip>
                                         ) : (
-                                            <span style={{ color: colors.textMuted, fontSize: '0.75rem', flexShrink: 0 }}>Unassigned</span>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                            <span style={{ color: colors.textMuted, fontSize: '0.75rem' }}>—</span>
+                                        );
+                                    }
+                                },
+                                {
+                                    title: '',
+                                    key: 'actions',
+                                    width: 50,
+                                    align: 'center' as const,
+                                    render: (_: any, task: Task) => {
+                                        const dropdownItems = [
+                                            {
+                                                key: 'edit',
+                                                icon: <EditOutlined />,
+                                                label: 'Edit',
+                                                onClick: () => navigate(`/tasks/${task.id}?workspace=${workspace.id}`),
+                                            },
+                                            {
+                                                key: 'delete',
+                                                icon: <DeleteOutlined />,
+                                                label: 'Delete',
+                                                danger: true,
+                                                onClick: () => {
+                                                    Modal.confirm({
+                                                        title: 'Delete task',
+                                                        content: 'Are you sure you want to delete this task?',
+                                                        okText: 'Delete',
+                                                        okButtonProps: { danger: true },
+                                                        cancelText: 'Cancel',
+                                                        onOk: () => console.log('Delete task', task.id),
+                                                    });
+                                                },
+                                            },
+                                        ];
+                                        return (
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
+                                                    <div
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: 24,
+                                                            height: 24,
+                                                            borderRadius: 4,
+                                                            cursor: 'pointer',
+                                                            color: '#a3a3a3',
+                                                        }}
+                                                        className="hover:bg-gray-200"
+                                                    >
+                                                        <EllipsisOutlined style={{ fontSize: 16 }} />
+                                                    </div>
+                                                </Dropdown>
+                                            </div>
+                                        );
+                                    }
+                                }
+                            ]}
+                        />
                     )}
                 </>
             )}

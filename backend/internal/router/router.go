@@ -79,8 +79,11 @@ func (r *Router) Setup(e *echo.Echo) {
 	workspaces.DELETE("/:id/members/:userId", r.workspaceHandler.RemoveMember)
 
 	workspaces.GET("/:id/tasks", r.workspaceHandler.GetTasks)
+	workspaces.GET("/:id/tasks/:taskId", r.workspaceHandler.GetTask)
 	workspaces.POST("/:id/tasks", r.workspaceHandler.CreateTask)
 	workspaces.PUT("/:id/tasks/:taskId/assign", r.workspaceHandler.AssignTask)
+	workspaces.PUT("/:id/tasks/:taskId", r.workspaceHandler.UpdateTask)
+	workspaces.DELETE("/:id/tasks/:taskId", r.workspaceHandler.DeleteTask)
 
 	// Health check
 	e.GET("/health", func(c echo.Context) error {

@@ -13,6 +13,12 @@ import { useWorkspaces, useCreateWorkspace, useJoinWorkspace } from "../../../ho
 import { useAuth } from "../../../hooks/useAuth";
 import WorkspaceCard from "../../molecules/WorkspaceCard";
 
+// Helper to get query params from URL
+const useQuery = () => {
+    const { search } = useLocation();
+    return new URLSearchParams(search);
+};
+
 const colors = {
     sidebarBg: '#fafafa',
     bgHover: '#f5f5f5',
@@ -28,6 +34,7 @@ const colors = {
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const query = useQuery();
     const { user, logout } = useAuth();
     const { data: workspaces, isLoading } = useWorkspaces();
 
@@ -38,11 +45,17 @@ const Sidebar = () => {
     const createMutation = useCreateWorkspace();
     const joinMutation = useJoinWorkspace();
 
-    const isPersonalTasks = location.pathname === "/tasks" || location.pathname.startsWith("/tasks");
+    // Check if viewing a workspace task (has workspace query param)
+    const workspaceFromQuery = query.get('workspace');
+    
+    // Personal tasks: /tasks without workspace query, or /tasks/:id without workspace query
+    const isPersonalTasks = (location.pathname === "/tasks" || location.pathname.startsWith("/tasks")) && !workspaceFromQuery;
     const isPersonalKanban = location.pathname === "/kanban";
+    
+    // Active workspace: either from /workspace/:id path or from ?workspace=xxx query param
     const activeWorkspaceId = location.pathname.startsWith("/workspace/")
         ? location.pathname.split("/")[2]
-        : null;
+        : workspaceFromQuery;
     const isWorkspaceSettings = location.pathname.includes("/settings");
 
     const handleTabChange = (key: string) => {
@@ -220,7 +233,7 @@ const Sidebar = () => {
                 footer={null}
                 title={<span style={{ color: colors.text, fontWeight: 600 }}>Workspace</span>}
                 style={{ top: 20 }}
-                destroyOnClose
+                destroyOnHidden={true}
             >
                 <Tabs
                     activeKey={activeTab}

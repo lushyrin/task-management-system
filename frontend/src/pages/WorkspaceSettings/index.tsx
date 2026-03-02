@@ -71,7 +71,7 @@ const WorkspaceSettings = () => {
 
     return (
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
-            {/* Header */}
+
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => navigate(`/workspace/${id}`)}
@@ -86,7 +86,7 @@ const WorkspaceSettings = () => {
                 </div>
             </div>
 
-            {/* General */}
+
             <section>
                 <div className="flex items-center justify-between mb-3">
                     <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.text }}>General</h2>
@@ -157,7 +157,7 @@ const WorkspaceSettings = () => {
                 )}
             </section>
 
-            {/* Invite Code */}
+
             <section>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.text, marginBottom: 12 }}>Invite</h2>
                 <InviteCodeCard
@@ -167,7 +167,7 @@ const WorkspaceSettings = () => {
                 />
             </section>
 
-            {/* Members */}
+
             <section>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.text, marginBottom: 12 }}>
                     Members
@@ -183,7 +183,7 @@ const WorkspaceSettings = () => {
                 </div>
             </section>
 
-            {/* Danger Zone */}
+
             <section>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.danger, marginBottom: 12 }}>Danger Zone</h2>
                 <div 

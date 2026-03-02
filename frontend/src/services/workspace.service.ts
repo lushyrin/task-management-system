@@ -59,4 +59,18 @@ export const workspaceService = {
         const { data } = await api.put(`/workspaces/${workspaceId}/tasks/${taskId}/assign`, payload);
         return data;
     },
+
+    getTask: async (workspaceId: string, taskId: string): Promise<Task> => {
+        const { data } = await api.get(`/workspaces/${workspaceId}/tasks/${taskId}`);
+        return data;
+    },
+
+    updateTask: async (workspaceId: string, taskId: string, payload: { title?: string; description?: string; status?: string; order?: number }): Promise<Task> => {
+        const { data } = await api.put(`/workspaces/${workspaceId}/tasks/${taskId}`, payload);
+        return data;
+    },
+
+    deleteTask: async (workspaceId: string, taskId: string): Promise<void> => {
+        await api.delete(`/workspaces/${workspaceId}/tasks/${taskId}`);
+    },
 };

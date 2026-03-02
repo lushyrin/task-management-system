@@ -16,6 +16,13 @@ type WorkspaceService struct {
 	userRepo      repository.UserRepository
 }
 
+type UpdateWorkspaceTaskRequest struct {
+	Status      *string `json:"status"`
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	AssigneeID  *string `json:"assigneeId"`
+}
+
 func NewWorkspaceService(
 	db *gorm.DB,
 	workspaceRepo repository.WorkspaceRepository,
@@ -47,7 +54,7 @@ type JoinWorkspaceRequest struct {
 type CreateWorkspaceTaskRequest struct {
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
-	AssigneeID  *string `json:"assigneeId"` // optional
+	AssigneeID  *string `json:"assigneeId"`
 }
 
 type AssignTaskRequest struct {
@@ -234,6 +241,19 @@ func (s *WorkspaceService) GetTasks(workspaceID, userID string) ([]models.Task, 
 	return s.taskRepo.FindAllByWorkspaceID(workspaceID)
 }
 
+func (s *WorkspaceService) GetTask(workspaceID, taskID, userID string) (*models.Task, error) {
+	isMember, err := s.workspaceRepo.IsMember(workspaceID, userID)
+	if err != nil || !isMember {
+		return nil, errors.New("access denied")
+	}
+
+	task, err := s.taskRepo.FindByWorkspaceAndTaskID(workspaceID, taskID)
+	if err != nil {
+		return nil, errors.New("task not found")
+	}
+	return task, nil
+}
+
 func (s *WorkspaceService) AssignTask(workspaceID, taskID, ownerID string, req *AssignTaskRequest) (*models.Task, error) {
 	workspace, err := s.workspaceRepo.FindByID(workspaceID)
 	if err != nil || workspace.OwnerID != ownerID {
@@ -258,4 +278,63 @@ func (s *WorkspaceService) AssignTask(workspaceID, taskID, ownerID string, req *
 		return nil, errors.New("failed to assign task")
 	}
 	return task, nil
+}
+func (s *WorkspaceService) UpdateTask(workspaceID, taskID, requesterID string, req *UpdateWorkspaceTaskRequest) (*models.Task, error) {
+	println("DEBUG Service - workspaceID:", workspaceID, "taskID:", taskID, "requesterID:", requesterID)
+	
+	// Check if user is a member of the workspace
+	member, err := s.workspaceRepo.FindMember(workspaceID, requesterID)
+	if err != nil {
+		println("DEBUG Service - FindMember error:", err.Error())
+		return nil, errors.New("access denied: not a workspace member")
+	}
+	println("DEBUG Service - member role:", member.Role)
+
+	// Find the task
+	task, err := s.taskRepo.FindByWorkspaceAndTaskID(workspaceID, taskID)
+	if err != nil {
+		println("DEBUG Service - FindByWorkspaceAndTaskID error:", err.Error())
+		return nil, errors.New("task not found")
+	}
+	println("DEBUG Service - task found:", task.ID, "title:", task.Title)
+
+	// Members can only update status
+	// Owners can update all fields
+	if member.Role == models.RoleMember {
+		// Members trying to edit title/description/assignee should be rejected
+		if req.Title != nil || req.Description != nil || req.AssigneeID != nil {
+			return nil, errors.New("members can only update task status")
+		}
+		if req.Status != nil {
+			task.Status = *req.Status
+		}
+	} else {
+		// Owner can update all fields
+		if req.Title != nil {
+			task.Title = *req.Title
+		}
+		if req.Description != nil {
+			task.Description = *req.Description
+		}
+		if req.AssigneeID != nil {
+			task.AssigneeID = req.AssigneeID
+		}
+		if req.Status != nil {
+			task.Status = *req.Status
+		}
+	}
+
+	err = s.taskRepo.Update(task)
+	if err != nil {
+		return nil, errors.New("failed to update task")
+	}
+	return task, nil
+}
+
+func (s *WorkspaceService) DeleteTask(workspaceID, taskID, requesterID string) error {
+	member, err := s.workspaceRepo.FindMember(workspaceID, requesterID)
+	if err != nil || member.Role != models.RoleOwner {
+		return errors.New("only the owner can delete workspace tasks")
+	}
+	return s.taskRepo.Delete(taskID, requesterID)
 }

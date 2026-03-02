@@ -1,42 +1,201 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Button, Divider, Spin, Typography, Space } from 'antd';
-import { ArrowLeftOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
-import { StatusBadge, PriorityBadge } from '@/components/atoms';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Alert, Button, Divider, Spin, Typography, Space, Tag, Avatar, Tooltip, Input, Select, Modal } from 'antd';
+import { ArrowLeftOutlined, CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined, MinusCircleOutlined, EditOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import { PriorityBadge } from '@/components/atoms';
 import { CommentList } from '@/components/organisms';
-import { useGetTaskById } from '@/hooks/useTasks';
+import { useGetTaskById, useDeletetask } from '@/hooks/useTasks';
+import { useGetWorkspaceTask, useWorkspace, useAssignTask } from '@/hooks/useWorkspace';
 import { useGetCommentsByTaskId, useCreateComment, useUpdateComment, useDeleteComment } from '@/hooks/useComments';
+import { taskService } from '@/services/task.service';
+import { workspaceService } from '@/services/workspace.service';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from '@/utils/helpers';
+import type { TaskStatus } from '@/types';
 
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
-const { Title, Text, Paragraph } = Typography
+// Workspace uses yellow accent (consistent workspace branding)
+const WORKSPACE_COLORS = {
+    accent: '#eab308',
+    accentLight: '#fef9c3',
+    text: '#171717',
+    textMuted: '#737373',
+};
+
+// Personal tasks use a different color (blue) to distinguish from workspace
+const PERSONAL_COLORS = {
+    accent: '#3b82f6',
+    accentLight: '#dbeafe',
+    text: '#171717',
+    textMuted: '#737373',
+};
+
+const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
+    not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
+    in_progress: { color: "processing", icon: <ClockCircleOutlined />, label: "In Progress" },
+    done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
+};
+
 const TaskDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>()
+    const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const workspaceId = searchParams.get('workspace');
+    const isWorkspaceTask = !!workspaceId;
 
-    const { data: task, isLoading: taskLoading, isError: taskError } = useGetTaskById(id!)
-    const { data: comments, isLoading: commentsLoading } = useGetCommentsByTaskId(id!)
-    const createComment = useCreateComment()
-    const updateComment = useUpdateComment()
-    const deleteComment = useDeleteComment()
+    // Colors based on task type
+    const colors = isWorkspaceTask ? WORKSPACE_COLORS : PERSONAL_COLORS;
+
+    // Edit state
+    const [isEditing, setIsEditing] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editAssigneeId, setEditAssigneeId] = useState<string | null>(null);
+    const titleInputRef = useRef<any>(null);
+
+    const {
+        data: personalTask,
+        isLoading: personalLoading,
+        isError: personalError
+    } = useGetTaskById(workspaceId ? '' : id!);
+
+    const {
+        data: workspaceTask,
+        isLoading: workspaceLoading,
+        isError: workspaceError
+    } = useGetWorkspaceTask(workspaceId || '', workspaceId ? id! : '');
+
+    const { data: workspace } = useWorkspace(workspaceId || '');
+    const deleteTask = useDeletetask();
+
+    const task = workspaceId ? workspaceTask : personalTask;
+
+    // Check if there are changes to save (must be after task is defined)
+    const hasChanges = task && (
+        editTitle !== task.title ||
+        editDescription !== (task.description || '') ||
+        (isWorkspaceTask && editAssigneeId !== (task.assigneeId || null))
+    );
+    const canSave = editTitle.trim() !== '' && hasChanges;
+    const isLoading = workspaceId ? workspaceLoading : personalLoading;
+    const isError = workspaceId ? workspaceError : personalError;
+
+    const { data: comments, isLoading: commentsLoading } = useGetCommentsByTaskId(id!);
+    const createComment = useCreateComment();
+    const updateComment = useUpdateComment();
+    const deleteComment = useDeleteComment();
+
+    // Initialize edit values when task loads
+    useEffect(() => {
+        if (task) {
+            setEditTitle(task.title);
+            setEditDescription(task.description || '');
+            setEditAssigneeId(task.assigneeId || null);
+        }
+    }, [task]);
+
+    // Focus title input when entering edit mode
+    useEffect(() => {
+        if (isEditing && titleInputRef.current) {
+            setTimeout(() => titleInputRef.current?.focus(), 100);
+        }
+    }, [isEditing]);
+
+    // Update mutations
+    const updatePersonalTask = useMutation({
+        mutationFn: (data: { title: string; description: string }) =>
+            taskService.update(id!, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            setIsEditing(false);
+        },
+        onError: (error: Error) => {
+            alert(error.message || 'Failed to update task');
+        },
+    });
+
+    const updateWorkspaceTask = useMutation({
+        mutationFn: (data: { title: string; description: string; assigneeId?: string | null }) =>
+            workspaceService.updateTask(workspaceId!, id!, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'tasks'] });
+            queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'tasks', id] });
+            setIsEditing(false);
+        },
+        onError: (error: Error) => {
+            alert(error.message || 'Failed to update task');
+        },
+    });
+
+    const handleSave = () => {
+        if (!editTitle.trim()) return;
+
+        if (isWorkspaceTask) {
+            updateWorkspaceTask.mutate({
+                title: editTitle.trim(),
+                description: editDescription.trim(),
+                assigneeId: editAssigneeId,
+            });
+        } else {
+            updatePersonalTask.mutate({
+                title: editTitle.trim(),
+                description: editDescription.trim(),
+            });
+        }
+    };
+
+    const handleCancel = () => {
+        if (task) {
+            setEditTitle(task.title);
+            setEditDescription(task.description || '');
+            setEditAssigneeId(task.assigneeId || null);
+        }
+        setIsEditing(false);
+    };
+
+    const handleDelete = () => {
+        Modal.confirm({
+            title: 'Delete Task',
+            content: 'Are you sure you want to delete this task? This action cannot be undone.',
+            okText: 'Delete',
+            okButtonProps: { danger: true },
+            cancelText: 'Cancel',
+            onOk: () => {
+                if (isWorkspaceTask) {
+                    workspaceService.deleteTask(workspaceId!, id!).then(() => {
+                        navigate(`/workspace/${workspaceId}`);
+                    });
+                } else {
+                    deleteTask.mutate(id!, {
+                        onSuccess: () => navigate('/tasks')
+                    });
+                }
+            },
+        });
+    };
 
     const handleCreateComment = (commentContent: string) => {
-        createComment.mutate({ taskId: id!, content: commentContent })
-    }
+        createComment.mutate({ taskId: id!, content: commentContent });
+    };
     const handleUpdateComment = (commentId: string, commentContent: string) => {
-        updateComment.mutate({ id: commentId, data: { content: commentContent } })
-    }
+        updateComment.mutate({ id: commentId, data: { content: commentContent } });
+    };
     const handleDeleteComment = (commentId: string) => {
-        deleteComment.mutate({ id: commentId, taskId: id! })
-    }
+        deleteComment.mutate({ id: commentId, taskId: id! });
+    };
 
-    if (taskLoading) {
+    if (isLoading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
                 <Spin size="large" />
             </div>
         );
     }
-    if (taskError || !task) {
+
+    if (isError || !task) {
         return (
             <div style={{ padding: '24px' }}>
                 <Alert
@@ -45,81 +204,207 @@ const TaskDetail: React.FC = () => {
                     message="Task not found"
                     description="This task may have been deleted or you don't have access to it."
                     action={
-                        <Button onClick={() => navigate('/tasks')}>
-                            Back to Tasks
+                        <Button onClick={() => navigate(workspaceId ? `/workspace/${workspaceId}` : '/tasks')}>
+                            Back
                         </Button>
                     }
                 />
             </div>
         );
     }
+
+    const statusConfig = STATUS_CONFIG[task.status];
+    const isOwner = workspace?.ownerId === task.userId;
+    const memberOptions = workspace?.members?.map((m: any) => ({
+        label: m.user.username,
+        value: m.userId,
+    })) || [];
+
     return (
         <div className="task-detail-page">
             <Button
                 type="text"
                 icon={<ArrowLeftOutlined />}
                 onClick={() => navigate(-1)}
-                style={{ marginBottom: '16px', color: '#737373', paddingLeft: 0 }}
+                style={{ marginBottom: '16px', color: colors.textMuted, paddingLeft: 0 }}
             >
                 Back
             </Button>
 
             <div className="task-detail-content">
                 <div style={{ marginBottom: '20px' }}>
+
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
                         <Space size="small">
-                            <StatusBadge status={task.status} />
+                            <Tag
+                                color={statusConfig.color}
+                                icon={statusConfig.icon}
+                                style={{ fontWeight: 500 }}
+                            >
+                                {statusConfig.label}
+                            </Tag>
                             {task.priority && <PriorityBadge priority={task.priority} />}
+                        </Space>
+
+
+                        <Space>
+                            {isEditing ? (
+                                <>
+                                    <Button
+                                        type="primary"
+                                        icon={<CheckOutlined />}
+                                        onClick={handleSave}
+                                        loading={updatePersonalTask.isPending || updateWorkspaceTask.isPending}
+                                        disabled={!canSave}
+                                        style={{
+                                            background: canSave ? colors.accent : '#d1d5db',
+                                            borderColor: canSave ? colors.accent : '#d1d5db',
+                                        }}
+                                    >
+                                        Save
+                                    </Button>
+                                    <Button
+                                        icon={<CloseOutlined />}
+                                        onClick={handleCancel}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        icon={<EditOutlined />}
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                        onClick={handleDelete}
+                                        loading={deleteTask.isPending}
+                                    >
+                                        Delete
+                                    </Button>
+                                </>
+                            )}
                         </Space>
                     </div>
 
-                    <Title
-                        level={2}
-                        style={{ margin: '0 0 8px 0', fontSize: '1.5rem', fontWeight: 700, color: '#171717' }}
-                    >
-                        {task.title}
-                    </Title>
 
-                    <div className="task-meta">
-                        <Space size="small" style={{ color: '#737373', fontSize: '0.875rem' }}>
-                            <UserOutlined />
-                            <Text type="secondary">
-                                {task.user?.username ?? 'Unknown'}
-                            </Text>
-                        </Space>
+                    {isEditing ? (
+                        <Input
+                            ref={titleInputRef}
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onPressEnter={handleSave}
+                            size="large"
+                            style={{
+                                marginBottom: '12px',
+                                fontSize: '1.5rem',
+                                fontWeight: 700,
+                            }}
+                            placeholder="Task title"
+                        />
+                    ) : (
+                        <Title level={2} style={{ margin: '0 0 12px 0', fontSize: '1.5rem', fontWeight: 700, color: colors.text }}>
+                            {task.title}
+                        </Title>
+                    )}
 
-                        <Space size="small" style={{ color: '#737373', fontSize: '0.875rem' }}>
+                    <div className="task-meta" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <Tooltip title={task.user?.username ?? 'Unknown'}>
+                            <Avatar
+                                size="small"
+                                style={{ background: colors.accent, color: '#fff' }}
+                            >
+                                {task.user?.username?.[0]?.toUpperCase()}
+                            </Avatar>
+                        </Tooltip>
+
+                        <Text type="secondary" style={{ color: colors.textMuted, fontSize: '0.875rem' }}>
+                            {task.user?.username ?? 'Unknown'}
+                        </Text>
+
+                        <Divider style={{ margin: 0, height: 20, borderColor: '#d4d4d4' }} />
+
+                        <Space size="small" style={{ color: colors.textMuted, fontSize: '0.875rem' }}>
                             <CalendarOutlined />
-                            <Text type="secondary">
-                                Created {formatDistanceToNow(task.createdAt)}
-                            </Text>
+                            <Text type="secondary">Created {formatDistanceToNow(task.createdAt)}</Text>
                         </Space>
 
                         {task.updatedAt !== task.createdAt && (
-                            <Text type="secondary" style={{ fontSize: '0.875rem' }}>
-                                Updated {formatDistanceToNow(task.updatedAt)}
-                            </Text>
+                            <>
+                                <Divider style={{ margin: 0, height: 20, borderColor: '#d4d4d4' }} />
+                                <Text type="secondary" style={{ fontSize: '0.875rem' }}>
+                                    Updated {formatDistanceToNow(task.updatedAt)}
+                                </Text>
+                            </>
                         )}
                     </div>
                 </div>
 
                 <Divider style={{ margin: '16px 0' }} />
 
-                <div>
-                    <Text strong
-                        style={{ fontSize: '0.875rem', color: '#525252', display: 'block', marginBottom: '8px' }}>
+                <div style={{ marginBottom: '20px' }}>
+                    <Text strong style={{ fontSize: '0.875rem', color: '#525252', display: 'block', marginBottom: '8px' }}>
                         Description
                     </Text>
-                    {task.description ? (
-                        <Paragraph className="task-description" style={{ margin: 0 }}>
-                            {task.description}
-                        </Paragraph>
+                    {isEditing ? (
+                        <TextArea
+                            value={editDescription}
+                            onChange={(e) => setEditDescription(e.target.value)}
+                            rows={4}
+                            placeholder="Add a description..."
+                            style={{ fontSize: '0.875rem' }}
+                        />
                     ) : (
-                        <Text type="secondary" style={{ fontSize: '0.875rem' }}>
-                            No description provided.
-                        </Text>
+                        task.description ? (
+                            <Paragraph className="task-description" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                {task.description}
+                            </Paragraph>
+                        ) : (
+                            <Text type="secondary" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
+                                No description provided.
+                            </Text>
+                        )
                     )}
                 </div>
+
+                {isWorkspaceTask && (
+                    <div style={{ marginBottom: '20px' }}>
+                        <Text strong style={{ fontSize: '0.875rem', color: '#525252', display: 'block', marginBottom: '8px' }}>
+                            Assignee
+                        </Text>
+                        {isEditing ? (
+                            <Select
+                                value={editAssigneeId}
+                                onChange={(val) => setEditAssigneeId(val)}
+                                options={memberOptions}
+                                placeholder="Unassigned"
+                                allowClear
+                                style={{ width: 200 }}
+                                prefix={<UserOutlined />}
+                            />
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {task.assignee ? (
+                                    <>
+                                        <Avatar
+                                            size="small"
+                                            style={{ background: colors.accent, color: '#fff' }}
+                                        >
+                                            {task.assignee.username?.[0]?.toUpperCase()}
+                                        </Avatar>
+                                        <Text>{task.assignee.username}</Text>
+                                    </>
+                                ) : (
+                                    <Text type="secondary" style={{ fontStyle: 'italic' }}>Unassigned</Text>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="task-comments-section">
@@ -134,6 +419,6 @@ const TaskDetail: React.FC = () => {
             </div>
         </div>
     );
-}
+};
 
 export default TaskDetail;

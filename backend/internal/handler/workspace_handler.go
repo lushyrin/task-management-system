@@ -151,6 +151,19 @@ func (h *WorkspaceHandler) GetTasks(c echo.Context) error {
 	return c.JSON(http.StatusOK, tasks)
 }
 
+func (h *WorkspaceHandler) GetTask(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+	workspaceID := c.Param("id")
+	taskID := c.Param("taskId")
+
+	task, err := h.workspaceService.GetTask(workspaceID, taskID, userID)
+	if err != nil {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, task)
+}
+
 // CreateTask handler untuk bikin task di dalam workspace
 func (h *WorkspaceHandler) CreateTask(c echo.Context) error {
 	userID := c.Get("user_id").(string)
@@ -186,4 +199,41 @@ func (h *WorkspaceHandler) AssignTask(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, task)
+}
+
+func (h *WorkspaceHandler) UpdateTask(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+	workspaceID := c.Param("id")
+	taskID := c.Param("taskId")
+
+	// Debug logging
+	println("DEBUG UpdateTask - UserID:", userID)
+	println("DEBUG UpdateTask - WorkspaceID:", workspaceID)
+	println("DEBUG UpdateTask - TaskID:", taskID)
+
+	var req service.UpdateWorkspaceTaskRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid Request"})
+	}
+
+	task, err := h.workspaceService.UpdateTask(workspaceID, taskID, userID, &req)
+	if err != nil {
+		println("DEBUG UpdateTask - Error:", err.Error())
+		return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, task)
+}
+
+func (h *WorkspaceHandler) DeleteTask(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+	workspaceID := c.Param("id")
+	taskID := c.Param("taskId")
+
+	err := h.workspaceService.DeleteTask(workspaceID, taskID, userID)
+	if err != nil {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "task deleted"})
 }

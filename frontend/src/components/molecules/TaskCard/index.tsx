@@ -1,20 +1,49 @@
-import { Card, Typography, Space, Avatar, Tooltip, Dropdown, Modal } from 'antd';
-import { MessageOutlined, ClockCircleOutlined, UserOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { StatusBadge } from '@/components/atoms';
-import type { Task } from '@/types';
+import { Card, Typography, Space, Avatar, Tooltip, Dropdown, Modal, Tag } from 'antd';
+import { MessageOutlined, ClockCircleOutlined, UserOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import type { Task, TaskStatus, TaskPriority } from '@/types';
 import { formatDistanceToNow } from '@/utils/helpers';
 import { useDeletetask } from '@/hooks/useTasks';
 import { useNavigate } from 'react-router-dom';
 
-
 const { Text } = Typography;
+
+const PRIORITY_CONFIG: Record<TaskPriority, { bg: string; color: string; label: string }> = {
+    high: { bg: '#fee2e2', color: '#dc2626', label: 'High' },
+    medium: { bg: '#fef3c7', color: '#d97706', label: 'Medium' },
+    low: { bg: '#ecfdf5', color: '#059669', label: 'Low' },
+};
+
+const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
+    not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
+    in_progress: { color: "processing", icon: <ClockCircleOutlined />, label: "In Progress" },
+    done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
+};
+
+const COLORS = {
+    text: '#171717',
+    textMuted: '#737373',
+    accent: '#eab308',
+    border: '#e5e5e5',
+    bg: '#fafafa',
+};
 
 interface TaskCardProps {
     task: Task;
     onClick?: (task: Task) => void;
+    viewMode?: 'grid' | 'list';
+    showPriority?: boolean;
+    showAssignee?: boolean;
+    workspaceId?: string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ 
+    task, 
+    onClick, 
+    viewMode = 'grid', 
+    showPriority = true,
+    showAssignee = false,
+    workspaceId,
+}) => {
     const deleteTask = useDeletetask();
     const navigate = useNavigate();
 
@@ -28,12 +57,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
             onOk: () => deleteTask.mutate(task.id),
         });
     };
+
+    const handleEdit = () => {
+        const url = workspaceId 
+            ? `/tasks/${task.id}?workspace=${workspaceId}` 
+            : `/tasks/${task.id}`;
+        navigate(url);
+    };
+
     const dropdownItems = [
         {
             key: 'edit',
             icon: <EditOutlined />,
             label: 'Edit',
-            onClick: () => navigate(`/tasks/${task.id}`),
+            onClick: handleEdit,
         },
         {
             key: 'delete',
@@ -43,19 +80,94 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
             onClick: handleDelete,
         },
     ];
-    return (
-        <Card
-            hoverable
-            className="task-card animate-fade-in"
-            onClick={() => onClick?.(task)}
-            bodyStyle={{ padding: 16 }}>
-            <Space direction="vertical" className="w-full" size={8}>
-                <div className="flex items-center justify-between w-full">
-                    <StatusBadge status={task.status} />
 
-                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight" >
+    const renderPriority = () => {
+        if (!task.priority) return null;
+        const config = PRIORITY_CONFIG[task.priority];
+        return (
+            <span style={{
+                padding: viewMode === 'list' ? '2px 6px' : '2px 8px',
+                borderRadius: '4px',
+                fontSize: viewMode === 'list' ? '10px' : '11px',
+                fontWeight: 600,
+                background: config.bg,
+                color: config.color,
+                flexShrink: 0,
+            }}>
+                {config.label}
+            </span>
+        );
+    };
+
+    const renderCommentCount = () => {
+        const count = task.comments?.length || task.commentCount || 0;
+        if (count === 0) return null;
+        return (
+            <Space size={4} style={{ color: COLORS.textMuted, fontSize: '11px' }}>
+                <MessageOutlined style={{ fontSize: 12 }} />
+                <span>{count}</span>
+            </Space>
+        );
+    };
+
+    const renderAssignee = () => {
+        if (!showAssignee) return null;
+        if (task.assignee) {
+            return (
+                <Tooltip title={`Assigned to ${task.assignee.username}`}>
+                    <Avatar size="small" style={{ background: COLORS.accent, color: '#fff', flexShrink: 0 }}>
+                        {task.assignee.username?.[0]?.toUpperCase()}
+                    </Avatar>
+                </Tooltip>
+            );
+        }
+        return (
+            <span style={{ color: COLORS.textMuted, fontSize: '0.75rem', flexShrink: 0 }}>Unassigned</span>
+        );
+    };
+
+    const statusConfig = STATUS_CONFIG[task.status];
+
+    // List View
+    if (viewMode === 'list') {
+        return (
+            <div
+                onClick={() => onClick?.(task)}
+                className="rounded-xl px-4 py-3 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer"
+                style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}` }}
+            >
+                <Tag color={statusConfig.color} icon={statusConfig.icon} className="!text-xs shrink-0">
+                    {statusConfig.label}
+                </Tag>
+                
+                {showPriority && renderPriority()}
+                
+                <div className="flex-1 min-w-0">
+                    <p style={{ color: COLORS.text, fontWeight: 500 }} className="truncate">{task.title}</p>
+                    {task.description && (
+                        <p style={{ color: COLORS.textMuted, fontSize: '0.75rem' }} className="truncate">
+                            {task.description}
+                        </p>
+                    )}
+                </div>
+
+                <span style={{ color: COLORS.textMuted, fontSize: '11px', flexShrink: 0 }}>
+                    {formatDistanceToNow(task.createdAt)}
+                </span>
+                
+                {renderCommentCount()}
+                
+                <Tooltip title={task.user?.username}>
+                    <Avatar size="small" style={{ background: COLORS.accent, color: '#fff', flexShrink: 0 }}>
+                        {task.user?.username?.[0]?.toUpperCase()}
+                    </Avatar>
+                </Tooltip>
+
+                {showAssignee && renderAssignee()}
+
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
                         <div
-                            onClick={(e) => e.stopPropagation()}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -65,55 +177,92 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                                 borderRadius: 4,
                                 cursor: 'pointer',
                                 color: '#a3a3a3',
-                                transition: 'all 0.15s',
                             }}
-                            className="hover:bg-gray-100"
+                            className="hover:bg-gray-200"
                         >
                             <EllipsisOutlined style={{ fontSize: 16 }} />
                         </div>
                     </Dropdown>
                 </div>
+            </div>
+        );
+    }
 
-                <Text strong className="task-card-title block">
-                    {task.title}
-                </Text>
-
-                {task.description && (
-                    <Text type="secondary" className="task-card-description block">
-                        {task.description}
-                    </Text>
-                )}
-
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <Space size={12}>
-                        <Tooltip title={task.user?.username || 'Unknown'}>
-                            <Avatar
-                                size="small"
-                                icon={<UserOutlined />}
-                                className="bg-blue-500"
-                            >
-                                {task.user?.username?.charAt(0).toUpperCase()}
-                            </Avatar>
-                        </Tooltip>
-
-                        {task.comments && task.comments.length > 0 && (
-                            <Space size={4} className="text-gray-400">
-                                <MessageOutlined />
-                                <Text type="secondary" className="text-xs">
-                                    {task.comments.length}
-                                </Text>
-                            </Space>
-                        )}
-                    </Space>
-
-                    <Space size={4} className="text-gray-400">
-                        <ClockCircleOutlined className="text-xs" />
-                        <Text type="secondary" className="text-xs">
-                            {formatDistanceToNow(task.createdAt)}
-                        </Text>
-                    </Space>
+    // Grid View
+    return (
+        <Card
+            hoverable
+            onClick={() => onClick?.(task)}
+            style={{
+                borderRadius: 12,
+                border: `1px solid ${COLORS.border}`,
+                background: COLORS.bg,
+                height: '100%',
+            }}
+            styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column', height: '100%' } }}
+        >
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Tag color={statusConfig.color} icon={statusConfig.icon}>
+                        {statusConfig.label}
+                    </Tag>
+                    {showPriority && renderPriority()}
                 </div>
-            </Space>
+
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 24,
+                                height: 24,
+                                borderRadius: 4,
+                                cursor: 'pointer',
+                                color: '#a3a3a3',
+                            }}
+                            className="hover:bg-gray-200"
+                        >
+                            <EllipsisOutlined style={{ fontSize: 16 }} />
+                        </div>
+                    </Dropdown>
+                </div>
+            </div>
+
+            <div style={{ flex: 1 }}>
+                <h4 style={{ color: COLORS.text, fontWeight: 600, marginBottom: 4 }}>
+                    {task.title}
+                </h4>
+                {task.description && (
+                    <p style={{ color: COLORS.textMuted, fontSize: '0.875rem' }}>
+                        {task.description}
+                    </p>
+                )}
+            </div>
+
+            <div
+                className="flex items-center justify-between mt-4 pt-3"
+                style={{ borderTop: `1px solid ${COLORS.border}` }}
+            >
+                <Space size={12}>
+                    <Tooltip title={task.user?.username}>
+                        <Avatar size="small" style={{ background: COLORS.accent, color: '#fff' }}>
+                            {task.user?.username?.[0]?.toUpperCase()}
+                        </Avatar>
+                    </Tooltip>
+                    <span style={{ color: COLORS.textMuted, fontSize: '11px' }}>
+                        {formatDistanceToNow(task.createdAt)}
+                    </span>
+                    {renderCommentCount()}
+                </Space>
+
+                {showAssignee && (
+                    <Space size={8}>
+                        {renderAssignee()}
+                    </Space>
+                )}
+            </div>
         </Card>
     );
 };

@@ -6,3 +6,4 @@ export { default as KanbanColumn } from './KanbanColumn';
 export { CommentList } from './CommentList';
 export { default as WorkspaceMemberList } from './WorkspaceMemberList';
 export { default as WorkspaceTaskList } from './WorkspaceTaskList';
+export { default as WorkspaceKanbanBoard } from './WorkspaceKanbanBoard';

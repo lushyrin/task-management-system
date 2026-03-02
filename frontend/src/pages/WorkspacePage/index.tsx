@@ -12,7 +12,7 @@ import {
 import { useWorkspace, useWorkspaceTasks } from "../../hooks/useWorkspace";
 import { useAuth } from "../../hooks/useAuth";
 import WorkspaceTaskList from "../../components/organisms/WorkspaceTaskList";
-import KanbanBoard from "../../components/organisms/KanbanBoard";
+import WorkspaceKanbanBoard from "../../components/organisms/WorkspaceKanbanBoard";
 
 const colors = {
     text: '#171717',
@@ -60,7 +60,7 @@ const WorkspacePage = () => {
 
     return (
         <div>
-            {/* Header */}
+
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <button
@@ -96,7 +96,6 @@ const WorkspacePage = () => {
                 )}
             </div>
 
-            {/* View Toggle */}
             <div className="flex items-center justify-between mb-6">
                 <Radio.Group
                     value={viewMode}
@@ -124,9 +123,8 @@ const WorkspacePage = () => {
                 </Radio.Group>
             </div>
 
-            {/* Tasks View */}
             {viewMode === 'kanban' ? (
-                <KanbanBoard tasks={tasks || []} />
+                <WorkspaceKanbanBoard tasks={tasks || []} workspaceId={workspace.id} />
             ) : (
                 <WorkspaceTaskList
                     workspace={workspace}

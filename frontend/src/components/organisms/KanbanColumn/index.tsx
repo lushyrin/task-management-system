@@ -10,6 +10,9 @@ interface KanbanColumnProps {
     status: TaskStatus;
     tasks: Task[];
     droppableId: string;
+    onUpdateTask?: (taskId: string, data: { title?: string; description?: string }) => void;
+    onDeleteTask?: (taskId: string) => void;
+    workspaceId?: string;
 }
 
 const columnColors: Record<TaskStatus, { dot: string; bg: string }> = {
@@ -32,6 +35,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     status,
     tasks,
     droppableId,
+    onUpdateTask,
+    onDeleteTask,
+    workspaceId,
 }) => {
     const colors = columnColors[status];
 
@@ -89,7 +95,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                 </Text>
             </div>
 
-            {/* Droppable Area */}
+
             <Droppable droppableId={droppableId}>
                 {(provided, snapshot) => (
                     <div
@@ -113,6 +119,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                                                 task={task}
                                                 isDragging={dragSnapshot.isDragging}
                                                 dragHandleProps={dragProvided.dragHandleProps ?? undefined}
+                                                onUpdate={onUpdateTask}
+                                                onDelete={onDeleteTask}
+                                                workspaceId={workspaceId}
                                             />
                                         </div>
                                     )}

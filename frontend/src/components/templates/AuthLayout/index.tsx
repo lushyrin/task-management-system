@@ -10,7 +10,7 @@ interface AuthLayoutProps {
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     return (
         <div className="min-h-screen flex">
-            {/* Left*/}
+
             <div
                 className="hidden lg:block relative flex-1"
                 style={{
@@ -54,7 +54,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-200/20 rounded-full blur-3xl"></div>
             </div>
 
-            {/* Right*/}
+
             <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white">
                 <div className="mx-auto w-full max-w-sm lg:w-96">
                     <div className="mb-8">

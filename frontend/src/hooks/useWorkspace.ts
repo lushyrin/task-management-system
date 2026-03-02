@@ -6,9 +6,8 @@ export const WORKSPACE_KEYS = {
     all: ["workspaces"] as const,
     detail: (id: string) => ["workspaces", id] as const,
     tasks: (id: string) => ["workspaces", id, "tasks"] as const,
+    task: (workspaceId: string, taskId: string) => ["workspaces", workspaceId, "tasks", taskId] as const,
 };
-
-// --- Queries ---
 
 export const useWorkspaces = () =>
     useQuery({
@@ -30,7 +29,6 @@ export const useWorkspaceTasks = (workspaceId: string) =>
         enabled: !!workspaceId,
     });
 
-// --- Mutations ---
 
 export const useCreateWorkspace = () => {
     const queryClient = useQueryClient();
@@ -150,3 +148,10 @@ export const useAssignTask = (workspaceId: string) => {
         },
     });
 };
+
+export const useGetWorkspaceTask = (workspaceId: string, taskId: string) =>
+    useQuery({
+        queryKey: WORKSPACE_KEYS.task(workspaceId, taskId),
+        queryFn: () => workspaceService.getTask(workspaceId, taskId),
+        enabled: !!workspaceId && !!taskId,
+    });

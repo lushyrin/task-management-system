@@ -16,7 +16,8 @@ export interface Task {
     workspaceId?: string | null;
     assigneeId?: string | null;
     assignee?: User | null;
-    comments?: Comment[]
+    comments?: Comment[];
+    commentCount?: number;  // For list views without full comments
     createdAt: string;
     updatedAt: string;
 }
