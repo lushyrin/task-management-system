@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button, Spin, Result, Radio, Typography } from "antd";
+import { Button, Result, Radio, Typography, Spin } from "antd";
 import {
     SettingOutlined,
     TeamOutlined,
@@ -9,16 +9,17 @@ import {
     UnorderedListOutlined,
     ColumnHeightOutlined,
 } from "@ant-design/icons";
-import { useWorkspace, useWorkspaceTasks } from "../../hooks/useWorkspace";
-import { useAuth } from "../../hooks/useAuth";
-import WorkspaceTaskList from "../../components/organisms/WorkspaceTaskList";
-import WorkspaceKanbanBoard from "../../components/organisms/WorkspaceKanbanBoard";
+import { useWorkspace, useWorkspaceTasks } from "@/hooks/useWorkspace";
+import { useAuth } from "@/hooks/useAuth";
+import WorkspaceTaskList from "@/components/organisms/WorkspaceTaskList";
+import WorkspaceKanbanBoard from "@/components/organisms/WorkspaceKanbanBoard";
 
 const colors = {
     text: '#171717',
     textMuted: '#737373',
     accent: '#eab308',
     border: '#e5e5e5',
+    white: '#ffffff',
 };
 
 type ViewMode = 'list' | 'grid' | 'kanban';
@@ -60,7 +61,6 @@ const WorkspacePage = () => {
 
     return (
         <div>
-
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <button
@@ -104,19 +104,19 @@ const WorkspacePage = () => {
                 >
                     <Radio.Button
                         value="grid"
-                        style={viewMode === 'grid' ? { background: colors.accent, borderColor: colors.accent, color: 'white' } : {}}
+                        style={viewMode === 'grid' ? { background: colors.accent, borderColor: colors.accent, color: colors.white } : {}}
                     >
                         <AppstoreAddOutlined />
                     </Radio.Button>
                     <Radio.Button
                         value="list"
-                        style={viewMode === 'list' ? { background: colors.accent, borderColor: colors.accent, color: 'white' } : {}}
+                        style={viewMode === 'list' ? { background: colors.accent, borderColor: colors.accent, color: colors.white } : {}}
                     >
                         <UnorderedListOutlined />
                     </Radio.Button>
                     <Radio.Button
                         value="kanban"
-                        style={viewMode === 'kanban' ? { background: colors.accent, borderColor: colors.accent, color: 'white' } : {}}
+                        style={viewMode === 'kanban' ? { background: colors.accent, borderColor: colors.accent, color: colors.white } : {}}
                     >
                         <ColumnHeightOutlined />
                     </Radio.Button>

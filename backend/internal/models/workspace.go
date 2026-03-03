@@ -69,3 +69,13 @@ func GenerateInviteCode() string {
 	}
 	return result
 }
+
+func (wm *WorkspaceMember) BeforeCreate(tx *gorm.DB) error {
+	if wm.ID == "" {
+		wm.ID = uuid.New().String()
+	}
+	if wm.JoinedAt.IsZero() {
+		wm.JoinedAt = time.Now()
+	}
+	return nil
+}

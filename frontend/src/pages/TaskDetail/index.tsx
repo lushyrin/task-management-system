@@ -5,7 +5,7 @@ import { ArrowLeftOutlined, CalendarOutlined, CheckCircleOutlined, ClockCircleOu
 import { PriorityBadge } from '@/components/atoms';
 import { CommentList } from '@/components/organisms';
 import { useGetTaskById, useDeletetask } from '@/hooks/useTasks';
-import { useGetWorkspaceTask, useWorkspace, useAssignTask } from '@/hooks/useWorkspace';
+import { useGetWorkspaceTask, useWorkspace } from '@/hooks/useWorkspace';
 import { useGetCommentsByTaskId, useCreateComment, useUpdateComment, useDeleteComment } from '@/hooks/useComments';
 import { taskService } from '@/services/task.service';
 import { workspaceService } from '@/services/workspace.service';
@@ -15,22 +15,6 @@ import type { TaskStatus } from '@/types';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-
-// Workspace uses yellow accent (consistent workspace branding)
-const WORKSPACE_COLORS = {
-    accent: '#eab308',
-    accentLight: '#fef9c3',
-    text: '#171717',
-    textMuted: '#737373',
-};
-
-// Personal tasks use a different color (blue) to distinguish from workspace
-const PERSONAL_COLORS = {
-    accent: '#3b82f6',
-    accentLight: '#dbeafe',
-    text: '#171717',
-    textMuted: '#737373',
-};
 
 const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
     not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
@@ -44,10 +28,21 @@ const TaskDetail: React.FC = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const workspaceId = searchParams.get('workspace');
-    const isWorkspaceTask = !!workspaceId;
+    const isWorkspace = !!workspaceId;
 
-    // Colors based on task type
-    const colors = isWorkspaceTask ? WORKSPACE_COLORS : PERSONAL_COLORS;
+    // ONE colors object - accent changes based on workspace or personal
+    const colors = {
+        text: '#171717',
+        textMuted: '#737373',
+        textLight: '#a3a3a3',
+        textSecondary: '#525252',
+        border: '#e5e5e5',
+        bg: '#fafafa',
+        bgHover: '#f5f5f5',
+        white: '#ffffff',
+        accent: isWorkspace ? '#eab308' : '#3b82f6',
+        accentLight: isWorkspace ? '#fef9c3' : '#dbeafe',
+    };
 
     // Edit state
     const [isEditing, setIsEditing] = useState(false);
@@ -73,11 +68,10 @@ const TaskDetail: React.FC = () => {
 
     const task = workspaceId ? workspaceTask : personalTask;
 
-    // Check if there are changes to save (must be after task is defined)
     const hasChanges = task && (
         editTitle !== task.title ||
         editDescription !== (task.description || '') ||
-        (isWorkspaceTask && editAssigneeId !== (task.assigneeId || null))
+        (isWorkspace && editAssigneeId !== (task.assigneeId || null))
     );
     const canSave = editTitle.trim() !== '' && hasChanges;
     const isLoading = workspaceId ? workspaceLoading : personalLoading;
@@ -88,7 +82,6 @@ const TaskDetail: React.FC = () => {
     const updateComment = useUpdateComment();
     const deleteComment = useDeleteComment();
 
-    // Initialize edit values when task loads
     useEffect(() => {
         if (task) {
             setEditTitle(task.title);
@@ -97,14 +90,12 @@ const TaskDetail: React.FC = () => {
         }
     }, [task]);
 
-    // Focus title input when entering edit mode
     useEffect(() => {
         if (isEditing && titleInputRef.current) {
             setTimeout(() => titleInputRef.current?.focus(), 100);
         }
     }, [isEditing]);
 
-    // Update mutations
     const updatePersonalTask = useMutation({
         mutationFn: (data: { title: string; description: string }) =>
             taskService.update(id!, data),
@@ -133,7 +124,7 @@ const TaskDetail: React.FC = () => {
     const handleSave = () => {
         if (!editTitle.trim()) return;
 
-        if (isWorkspaceTask) {
+        if (isWorkspace) {
             updateWorkspaceTask.mutate({
                 title: editTitle.trim(),
                 description: editDescription.trim(),
@@ -164,7 +155,7 @@ const TaskDetail: React.FC = () => {
             okButtonProps: { danger: true },
             cancelText: 'Cancel',
             onOk: () => {
-                if (isWorkspaceTask) {
+                if (isWorkspace) {
                     workspaceService.deleteTask(workspaceId!, id!).then(() => {
                         navigate(`/workspace/${workspaceId}`);
                     });
@@ -177,19 +168,13 @@ const TaskDetail: React.FC = () => {
         });
     };
 
-    const handleCreateComment = (commentContent: string) => {
-        createComment.mutate({ taskId: id!, content: commentContent });
-    };
-    const handleUpdateComment = (commentId: string, commentContent: string) => {
-        updateComment.mutate({ id: commentId, data: { content: commentContent } });
-    };
-    const handleDeleteComment = (commentId: string) => {
-        deleteComment.mutate({ id: commentId, taskId: id! });
-    };
+    const handleCreateComment = (content: string) => createComment.mutate({ taskId: id!, content });
+    const handleUpdateComment = (commentId: string, content: string) => updateComment.mutate({ id: commentId, data: { content } });
+    const handleDeleteComment = (commentId: string) => deleteComment.mutate({ id: commentId, taskId: id! });
 
     if (isLoading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+            <div className="flex items-center justify-center h-full py-40">
                 <Spin size="large" />
             </div>
         );
@@ -197,7 +182,7 @@ const TaskDetail: React.FC = () => {
 
     if (isError || !task) {
         return (
-            <div style={{ padding: '24px' }}>
+            <div className="p-6">
                 <Alert
                     type="error"
                     showIcon
@@ -214,7 +199,6 @@ const TaskDetail: React.FC = () => {
     }
 
     const statusConfig = STATUS_CONFIG[task.status];
-    const isOwner = workspace?.ownerId === task.userId;
     const memberOptions = workspace?.members?.map((m: any) => ({
         label: m.user.username,
         value: m.userId,
@@ -233,19 +217,13 @@ const TaskDetail: React.FC = () => {
 
             <div className="task-detail-content">
                 <div style={{ marginBottom: '20px' }}>
-
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
                         <Space size="small">
-                            <Tag
-                                color={statusConfig.color}
-                                icon={statusConfig.icon}
-                                style={{ fontWeight: 500 }}
-                            >
+                            <Tag color={statusConfig.color} icon={statusConfig.icon} style={{ fontWeight: 500 }}>
                                 {statusConfig.label}
                             </Tag>
                             {task.priority && <PriorityBadge priority={task.priority} />}
                         </Space>
-
 
                         <Space>
                             {isEditing ? (
@@ -257,40 +235,22 @@ const TaskDetail: React.FC = () => {
                                         loading={updatePersonalTask.isPending || updateWorkspaceTask.isPending}
                                         disabled={!canSave}
                                         style={{
-                                            background: canSave ? colors.accent : '#d1d5db',
-                                            borderColor: canSave ? colors.accent : '#d1d5db',
+                                            background: canSave ? colors.accent : colors.textLight,
+                                            borderColor: canSave ? colors.accent : colors.textLight,
                                         }}
                                     >
                                         Save
                                     </Button>
-                                    <Button
-                                        icon={<CloseOutlined />}
-                                        onClick={handleCancel}
-                                    >
-                                        Cancel
-                                    </Button>
+                                    <Button icon={<CloseOutlined />} onClick={handleCancel}>Cancel</Button>
                                 </>
                             ) : (
                                 <>
-                                    <Button
-                                        icon={<EditOutlined />}
-                                        onClick={() => setIsEditing(true)}
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        danger
-                                        icon={<DeleteOutlined />}
-                                        onClick={handleDelete}
-                                        loading={deleteTask.isPending}
-                                    >
-                                        Delete
-                                    </Button>
+                                    <Button icon={<EditOutlined />} onClick={() => setIsEditing(true)}>Edit</Button>
+                                    <Button danger icon={<DeleteOutlined />} onClick={handleDelete} loading={deleteTask.isPending}>Delete</Button>
                                 </>
                             )}
                         </Space>
                     </div>
-
 
                     {isEditing ? (
                         <Input
@@ -299,11 +259,7 @@ const TaskDetail: React.FC = () => {
                             onChange={(e) => setEditTitle(e.target.value)}
                             onPressEnter={handleSave}
                             size="large"
-                            style={{
-                                marginBottom: '12px',
-                                fontSize: '1.5rem',
-                                fontWeight: 700,
-                            }}
+                            style={{ marginBottom: '12px', fontSize: '1.5rem', fontWeight: 700 }}
                             placeholder="Task title"
                         />
                     ) : (
@@ -314,10 +270,7 @@ const TaskDetail: React.FC = () => {
 
                     <div className="task-meta" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <Tooltip title={task.user?.username ?? 'Unknown'}>
-                            <Avatar
-                                size="small"
-                                style={{ background: colors.accent, color: '#fff' }}
-                            >
+                            <Avatar size="small" style={{ background: colors.accent, color: colors.white }}>
                                 {task.user?.username?.[0]?.toUpperCase()}
                             </Avatar>
                         </Tooltip>
@@ -326,7 +279,7 @@ const TaskDetail: React.FC = () => {
                             {task.user?.username ?? 'Unknown'}
                         </Text>
 
-                        <Divider style={{ margin: 0, height: 20, borderColor: '#d4d4d4' }} />
+                        <Divider style={{ margin: 0, height: 20, borderColor: colors.border }} />
 
                         <Space size="small" style={{ color: colors.textMuted, fontSize: '0.875rem' }}>
                             <CalendarOutlined />
@@ -335,7 +288,7 @@ const TaskDetail: React.FC = () => {
 
                         {task.updatedAt !== task.createdAt && (
                             <>
-                                <Divider style={{ margin: 0, height: 20, borderColor: '#d4d4d4' }} />
+                                <Divider style={{ margin: 0, height: 20, borderColor: colors.border }} />
                                 <Text type="secondary" style={{ fontSize: '0.875rem' }}>
                                     Updated {formatDistanceToNow(task.updatedAt)}
                                 </Text>
@@ -347,7 +300,7 @@ const TaskDetail: React.FC = () => {
                 <Divider style={{ margin: '16px 0' }} />
 
                 <div style={{ marginBottom: '20px' }}>
-                    <Text strong style={{ fontSize: '0.875rem', color: '#525252', display: 'block', marginBottom: '8px' }}>
+                    <Text strong style={{ fontSize: '0.875rem', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
                         Description
                     </Text>
                     {isEditing ? (
@@ -358,22 +311,20 @@ const TaskDetail: React.FC = () => {
                             placeholder="Add a description..."
                             style={{ fontSize: '0.875rem' }}
                         />
+                    ) : task.description ? (
+                        <Paragraph className="task-description" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                            {task.description}
+                        </Paragraph>
                     ) : (
-                        task.description ? (
-                            <Paragraph className="task-description" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                                {task.description}
-                            </Paragraph>
-                        ) : (
-                            <Text type="secondary" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
-                                No description provided.
-                            </Text>
-                        )
+                        <Text type="secondary" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
+                            No description provided.
+                        </Text>
                     )}
                 </div>
 
-                {isWorkspaceTask && (
+                {isWorkspace && (
                     <div style={{ marginBottom: '20px' }}>
-                        <Text strong style={{ fontSize: '0.875rem', color: '#525252', display: 'block', marginBottom: '8px' }}>
+                        <Text strong style={{ fontSize: '0.875rem', color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
                             Assignee
                         </Text>
                         {isEditing ? (
@@ -390,10 +341,7 @@ const TaskDetail: React.FC = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {task.assignee ? (
                                     <>
-                                        <Avatar
-                                            size="small"
-                                            style={{ background: colors.accent, color: '#fff' }}
-                                        >
+                                        <Avatar size="small" style={{ background: colors.accent, color: colors.white }}>
                                             {task.assignee.username?.[0]?.toUpperCase()}
                                         </Avatar>
                                         <Text>{task.assignee.username}</Text>

@@ -5,7 +5,7 @@ interface StatusBadgeProps {
     status: TaskStatus;
 }
 
-const statusConfig: Record<TaskStatus, { color: string; label: string; bgColor: string }> = {
+const STATUS_CONFIG: Record<TaskStatus, { color: string; label: string; bgColor: string }> = {
     not_started: {
         color: '#6B7280',
         label: 'Not Started',
@@ -24,7 +24,7 @@ const statusConfig: Record<TaskStatus, { color: string; label: string; bgColor: 
 };
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-    const config = statusConfig[status];
+    const config = STATUS_CONFIG[status];
 
     return (
         <Tag

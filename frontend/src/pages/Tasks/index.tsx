@@ -1,18 +1,22 @@
 import useTasks from '@/hooks/useTasks';
 import { AppstoreAddOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { Radio, Space, Typography, message } from 'antd';
+import { Radio, Space, Typography, message, Spin } from 'antd';
 import React, { useState } from 'react';
 import Button from '@/components/atoms/Button';
 import { TaskForm, TaskList } from '@/components/organisms';
 import type { CreateTaskRequest, UpdateTaskRequest } from '@/types';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
 type ViewMode = 'list' | 'grid'
 
 const Tasks: React.FC = () => {
     const { tasks, isLoading, createTask } = useTasks()
     const [ViewMode, setViewMode] = useState<ViewMode>('grid')
     const [modalOpen, setModalOpen] = useState(false)
+    const textColor = '#171717';
+    const textMutedColor = '#737373';
+
     const handleCreate = async (data: CreateTaskRequest | UpdateTaskRequest) => {
         createTask.mutate(data as CreateTaskRequest, {
             onSuccess: () => {
@@ -24,17 +28,25 @@ const Tasks: React.FC = () => {
         })
     }
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-full py-40">
+                <Spin size="large" />
+            </div>
+        );
+    }
+
     return (
         <div>
             <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                        <Title level={2} style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: '#171717' }}>
+                        <Title level={2} style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700, color: textColor }}>
                             Tasks
                         </Title>
-                        <p style={{ margin: '4px 0 0 0', color: '#737373', fontSize: '0.95rem' }}>
-                            Manage and track all your task
-                        </p>
+                        <Text style={{ margin: '4px 0 0 0', color: textMutedColor, fontSize: '0.95rem', display: 'block' }}>
+                            Manage and track all your tasks
+                        </Text>
                     </div>
 
                     <Space size='middle'>
@@ -57,6 +69,6 @@ const Tasks: React.FC = () => {
             <TaskForm visible={modalOpen} onCancel={() => setModalOpen(false)} onSubmit={handleCreate} isLoading={createTask.isPending} />
         </div>
     )
-};
+}
 
 export default Tasks;

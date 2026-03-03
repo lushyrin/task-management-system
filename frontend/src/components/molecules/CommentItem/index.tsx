@@ -6,6 +6,15 @@ import { formatDistanceToNow } from '@/utils/helpers';
 
 const { Text } = Typography;
 const { TextArea } = Input;
+const colors = {
+    text: '#171717',
+    textMuted: '#737373',
+    textLight: '#a3a3a3',
+    textSecondary: '#404040',
+    accent: '#facc15',
+    accentDark: '#713f12',
+    white: '#ffffff',
+};
 
 export const CommentItem: React.FC<CommentItemProps> = ({
     comment,
@@ -52,14 +61,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             <Avatar
                 size={32}
                 icon={<UserOutlined />}
-                style={{ background: '#facc15', color: '#713f12', fontWeight: 600, flexShrink: 0 }}
+                style={{ background: colors.accent, color: colors.accentDark, fontWeight: 600, flexShrink: 0 }}
             >
                 {comment.user?.username?.charAt(0).toUpperCase()}
             </Avatar>
 
             <div style={{ flex: 1, minWidth: 0 }}>
                 <Space size={8} style={{ marginBottom: 4 }}>
-                    <Text strong style={{ fontSize: '0.8rem', color: '#171717' }}>
+                    <Text strong style={{ fontSize: '0.8rem', color: colors.text }}>
                         {comment.user?.username || 'Unknown'}
                     </Text>
                     <Text type="secondary" style={{ fontSize: '0.75rem' }}>
@@ -87,7 +96,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         </Space>
                     </div>
                 ) : (
-                    <Text style={{ fontSize: '0.875rem', color: '#404040', display: 'block', wordBreak: 'break-word' }}>
+                    <Text style={{ fontSize: '0.875rem', color: colors.textSecondary, display: 'block', wordBreak: 'break-word' }}>
                         {comment.content}
                     </Text>
                 )}
@@ -103,7 +112,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                         type="text"
                         size="small"
                         icon={<EllipsisOutlined style={{ fontSize: 18 }} />}
-                        style={{ color: '#a3a3a3', flexShrink: 0 }}
+                        style={{ color: colors.textLight, flexShrink: 0 }}
                     />
                 </Dropdown>
             )}

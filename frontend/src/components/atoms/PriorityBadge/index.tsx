@@ -6,7 +6,7 @@ interface PriorityBadgeProps {
     priority: Priority;
 }
 
-const priorityConfig: Record<Priority, { color: string; label: string; bgColor: string }> = {
+const PRIORITY_CONFIG: Record<Priority, { color: string; label: string; bgColor: string }> = {
     low: {
         color: '#059669',
         label: 'Low',
@@ -25,7 +25,7 @@ const priorityConfig: Record<Priority, { color: string; label: string; bgColor: 
 };
 
 const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
-    const config = priorityConfig[priority];
+    const config = PRIORITY_CONFIG[priority];
 
     return (
         <Tag

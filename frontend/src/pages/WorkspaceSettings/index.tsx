@@ -1,19 +1,21 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Spin, Result, Popconfirm, Form, Input } from "antd";
 import { ArrowLeftOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { useWorkspace, useUpdateWorkspace, useDeleteWorkspace } from "../../hooks/useWorkspace";
-import { useAuth } from "../../hooks/useAuth";
-import WorkspaceMemberList from "../../components/organisms/WorkspaceMemberList";
-import InviteCodeCard from "../../components/molecules/InviteCodeCard";
+import { useWorkspace, useUpdateWorkspace, useDeleteWorkspace } from "@/hooks/useWorkspace";
+import { useAuth } from "@/hooks/useAuth";
+import WorkspaceMemberList from "@/components/organisms/WorkspaceMemberList";
+import InviteCodeCard from "@/components/molecules/InviteCodeCard";
 import { useState } from "react";
 
-// Clean color palette
 const colors = {
     text: '#171717',
     textMuted: '#737373',
+    textLight: '#a3a3a3',
     accent: '#eab308',
     border: '#e5e5e5',
     bg: '#fafafa',
+    bgHover: '#f5f5f5',
+    white: '#ffffff',
     danger: '#ef4444',
 };
 
@@ -71,7 +73,6 @@ const WorkspaceSettings = () => {
 
     return (
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
-
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => navigate(`/workspace/${id}`)}
@@ -85,7 +86,6 @@ const WorkspaceSettings = () => {
                     <p style={{ color: colors.textMuted }}>{workspace.name}</p>
                 </div>
             </div>
-
 
             <section>
                 <div className="flex items-center justify-between mb-3">
@@ -106,10 +106,10 @@ const WorkspaceSettings = () => {
                 </div>
 
                 {editingName ? (
-                    <Form 
-                        form={form} 
-                        layout="vertical" 
-                        onFinish={handleUpdate} 
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={handleUpdate}
                         className="rounded-xl p-4"
                         style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
                     >
@@ -127,9 +127,9 @@ const WorkspaceSettings = () => {
                             <Input.TextArea rows={2} />
                         </Form.Item>
                         <div className="flex gap-2">
-                            <Button 
-                                type="primary" 
-                                htmlType="submit" 
+                            <Button
+                                type="primary"
+                                htmlType="submit"
                                 loading={updateMutation.isPending}
                                 style={{ background: colors.accent, borderColor: colors.accent }}
                             >
@@ -139,7 +139,7 @@ const WorkspaceSettings = () => {
                         </div>
                     </Form>
                 ) : (
-                    <div 
+                    <div
                         className="rounded-xl p-4 space-y-2"
                         style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
                     >
@@ -157,7 +157,6 @@ const WorkspaceSettings = () => {
                 )}
             </section>
 
-
             <section>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.text, marginBottom: 12 }}>Invite</h2>
                 <InviteCodeCard
@@ -167,7 +166,6 @@ const WorkspaceSettings = () => {
                 />
             </section>
 
-
             <section>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.text, marginBottom: 12 }}>
                     Members
@@ -175,7 +173,7 @@ const WorkspaceSettings = () => {
                         {workspace.members?.length ?? 0}
                     </span>
                 </h2>
-                <div 
+                <div
                     className="rounded-xl py-2"
                     style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
                 >
@@ -183,10 +181,9 @@ const WorkspaceSettings = () => {
                 </div>
             </section>
 
-
             <section>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: colors.danger, marginBottom: 12 }}>Danger Zone</h2>
-                <div 
+                <div
                     className="rounded-xl p-4 flex items-center justify-between"
                     style={{ background: '#fef2f2', border: '1px solid #fecaca' }}
                 >

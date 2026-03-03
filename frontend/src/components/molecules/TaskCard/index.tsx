@@ -1,30 +1,31 @@
-import { Card, Typography, Space, Avatar, Tooltip, Dropdown, Modal, Tag } from 'antd';
-import { MessageOutlined, ClockCircleOutlined, UserOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Card, Space, Avatar, Tooltip, Dropdown, Modal, Tag } from 'antd';
+import { MessageOutlined, ClockCircleOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { Task, TaskStatus, TaskPriority } from '@/types';
 import { formatDistanceToNow } from '@/utils/helpers';
 import { useDeletetask } from '@/hooks/useTasks';
 import { useNavigate } from 'react-router-dom';
 
-const { Text } = Typography;
+const colors = {
+    text: '#171717',
+    textMuted: '#737373',
+    textLight: '#a3a3a3',
+    accent: '#eab308',
+    border: '#e5e5e5',
+    bg: '#fafafa',
+    bgHover: '#f5f5f5',
+    white: '#ffffff',
+};
 
 const PRIORITY_CONFIG: Record<TaskPriority, { bg: string; color: string; label: string }> = {
-    high: { bg: '#fee2e2', color: '#dc2626', label: 'High' },
-    medium: { bg: '#fef3c7', color: '#d97706', label: 'Medium' },
-    low: { bg: '#ecfdf5', color: '#059669', label: 'Low' },
+    high: { bg: '#FEE2E2', color: '#DC2626', label: 'High' },
+    medium: { bg: '#FEF3C7', color: '#D97706', label: 'Medium' },
+    low: { bg: '#D1FAE5', color: '#059669', label: 'Low' },
 };
 
 const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
     not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
     in_progress: { color: "processing", icon: <ClockCircleOutlined />, label: "In Progress" },
     done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
-};
-
-const COLORS = {
-    text: '#171717',
-    textMuted: '#737373',
-    accent: '#eab308',
-    border: '#e5e5e5',
-    bg: '#fafafa',
 };
 
 interface TaskCardProps {
@@ -36,10 +37,10 @@ interface TaskCardProps {
     workspaceId?: string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ 
-    task, 
-    onClick, 
-    viewMode = 'grid', 
+const TaskCard: React.FC<TaskCardProps> = ({
+    task,
+    onClick,
+    viewMode = 'grid',
     showPriority = true,
     showAssignee = false,
     workspaceId,
@@ -59,8 +60,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     };
 
     const handleEdit = () => {
-        const url = workspaceId 
-            ? `/tasks/${task.id}?workspace=${workspaceId}` 
+        const url = workspaceId
+            ? `/tasks/${task.id}?workspace=${workspaceId}`
             : `/tasks/${task.id}`;
         navigate(url);
     };
@@ -103,7 +104,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         const count = task.comments?.length || task.commentCount || 0;
         if (count === 0) return null;
         return (
-            <Space size={4} style={{ color: COLORS.textMuted, fontSize: '11px' }}>
+            <Space size={4} style={{ color: colors.textMuted, fontSize: '11px' }}>
                 <MessageOutlined style={{ fontSize: 12 }} />
                 <span>{count}</span>
             </Space>
@@ -115,14 +116,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
         if (task.assignee) {
             return (
                 <Tooltip title={`Assigned to ${task.assignee.username}`}>
-                    <Avatar size="small" style={{ background: COLORS.accent, color: '#fff', flexShrink: 0 }}>
+                    <Avatar size="small" style={{ background: colors.accent, color: colors.white, flexShrink: 0 }}>
                         {task.assignee.username?.[0]?.toUpperCase()}
                     </Avatar>
                 </Tooltip>
             );
         }
         return (
-            <span style={{ color: COLORS.textMuted, fontSize: '0.75rem', flexShrink: 0 }}>Unassigned</span>
+            <span style={{ color: colors.textMuted, fontSize: '0.75rem', flexShrink: 0 }}>Unassigned</span>
         );
     };
 
@@ -134,31 +135,31 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <div
                 onClick={() => onClick?.(task)}
                 className="rounded-xl px-4 py-3 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer"
-                style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}` }}
+                style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
             >
-                <Tag color={statusConfig.color} icon={statusConfig.icon} className="!text-xs shrink-0">
+                <Tag color={statusConfig.color} icon={statusConfig.icon} className="text-xs! shrink-0">
                     {statusConfig.label}
                 </Tag>
-                
+
                 {showPriority && renderPriority()}
-                
+
                 <div className="flex-1 min-w-0">
-                    <p style={{ color: COLORS.text, fontWeight: 500 }} className="truncate">{task.title}</p>
+                    <p style={{ color: colors.text, fontWeight: 500 }} className="truncate">{task.title}</p>
                     {task.description && (
-                        <p style={{ color: COLORS.textMuted, fontSize: '0.75rem' }} className="truncate">
+                        <p style={{ color: colors.textMuted, fontSize: '0.75rem' }} className="truncate">
                             {task.description}
                         </p>
                     )}
                 </div>
 
-                <span style={{ color: COLORS.textMuted, fontSize: '11px', flexShrink: 0 }}>
+                <span style={{ color: colors.textMuted, fontSize: '11px', flexShrink: 0 }}>
                     {formatDistanceToNow(task.createdAt)}
                 </span>
-                
+
                 {renderCommentCount()}
-                
+
                 <Tooltip title={task.user?.username}>
-                    <Avatar size="small" style={{ background: COLORS.accent, color: '#fff', flexShrink: 0 }}>
+                    <Avatar size="small" style={{ background: colors.accent, color: colors.white, flexShrink: 0 }}>
                         {task.user?.username?.[0]?.toUpperCase()}
                     </Avatar>
                 </Tooltip>
@@ -176,7 +177,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                                 height: 24,
                                 borderRadius: 4,
                                 cursor: 'pointer',
-                                color: '#a3a3a3',
+                                color: colors.textLight,
                             }}
                             className="hover:bg-gray-200"
                         >
@@ -195,8 +196,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
             onClick={() => onClick?.(task)}
             style={{
                 borderRadius: 12,
-                border: `1px solid ${COLORS.border}`,
-                background: COLORS.bg,
+                border: `1px solid ${colors.border}`,
+                background: colors.bg,
                 height: '100%',
             }}
             styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column', height: '100%' } }}
@@ -220,7 +221,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                                 height: 24,
                                 borderRadius: 4,
                                 cursor: 'pointer',
-                                color: '#a3a3a3',
+                                color: colors.textLight,
                             }}
                             className="hover:bg-gray-200"
                         >
@@ -231,11 +232,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
 
             <div style={{ flex: 1 }}>
-                <h4 style={{ color: COLORS.text, fontWeight: 600, marginBottom: 4 }}>
+                <h4 style={{ color: colors.text, fontWeight: 600, marginBottom: 4 }}>
                     {task.title}
                 </h4>
                 {task.description && (
-                    <p style={{ color: COLORS.textMuted, fontSize: '0.875rem' }}>
+                    <p style={{ color: colors.textMuted, fontSize: '0.875rem' }}>
                         {task.description}
                     </p>
                 )}
@@ -243,15 +244,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
             <div
                 className="flex items-center justify-between mt-4 pt-3"
-                style={{ borderTop: `1px solid ${COLORS.border}` }}
+                style={{ borderTop: `1px solid ${colors.border}` }}
             >
                 <Space size={12}>
                     <Tooltip title={task.user?.username}>
-                        <Avatar size="small" style={{ background: COLORS.accent, color: '#fff' }}>
+                        <Avatar size="small" style={{ background: colors.accent, color: colors.white }}>
                             {task.user?.username?.[0]?.toUpperCase()}
                         </Avatar>
                     </Tooltip>
-                    <span style={{ color: COLORS.textMuted, fontSize: '11px' }}>
+                    <span style={{ color: colors.textMuted, fontSize: '11px' }}>
                         {formatDistanceToNow(task.createdAt)}
                     </span>
                     {renderCommentCount()}

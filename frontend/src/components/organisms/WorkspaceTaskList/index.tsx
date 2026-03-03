@@ -1,31 +1,33 @@
 import { useState } from "react";
-import { Button, Form, Input, Modal, Select, Empty, Tag, Avatar, Tooltip, List, Card, Space, Dropdown, Table } from "antd";
-import { PlusOutlined, UserOutlined, CheckCircleOutlined, ClockCircleOutlined, MinusCircleOutlined, MessageOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useWorkspaceTasks, useCreateWorkspaceTask, useAssignTask } from "../../../hooks/useWorkspace";
+import { Button, Form, Input, Modal, Select, Empty, Tag, Avatar, Tooltip, List, Card, Space, Dropdown, Table, Spin } from "antd";
+import { PlusOutlined, CheckCircleOutlined, ClockCircleOutlined, MinusCircleOutlined, MessageOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useWorkspaceTasks, useCreateWorkspaceTask, useAssignTask } from "@/hooks/useWorkspace";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "@/utils/helpers";
-import type { Task, Workspace, WorkspaceMember, TaskStatus, TaskPriority } from "../../../types";
+import type { Task, Workspace, WorkspaceMember, TaskStatus, TaskPriority } from "@/types";
 
 const colors = {
     text: '#171717',
     textMuted: '#737373',
-    accent: '#eab308',      // Yellow - workspace brand color
-    accentLight: '#fef9c3', // Light yellow
+    textLight: '#a3a3a3',
+    accent: '#eab308',
+    accentLight: '#fef9c3',
     border: '#e5e5e5',
     bg: '#fafafa',
     bgHover: '#f5f5f5',
+    white: '#ffffff',
+};
+
+const PRIORITY_CONFIG: Record<TaskPriority, { bg: string; color: string; label: string }> = {
+    high: { bg: '#FEE2E2', color: '#DC2626', label: 'High' },
+    medium: { bg: '#FEF3C7', color: '#D97706', label: 'Medium' },
+    low: { bg: '#D1FAE5', color: '#059669', label: 'Low' },
 };
 
 const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
     not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
     in_progress: { color: "processing", icon: <ClockCircleOutlined />, label: "In Progress" },
     done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
-};
-
-const PRIORITY_CONFIG: Record<TaskPriority, { bg: string; color: string; label: string }> = {
-    high: { bg: '#fee2e2', color: '#dc2626', label: 'High' },
-    medium: { bg: '#fef3c7', color: '#d97706', label: 'Medium' },
-    low: { bg: '#ecfdf5', color: '#059669', label: 'Low' },
 };
 
 interface WorkspaceTaskListProps {
@@ -64,10 +66,8 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
 
     if (isLoading) {
         return (
-            <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
-                ))}
+            <div className="flex items-center justify-center py-20">
+                <Spin size="large" />
             </div>
         );
     }
@@ -102,7 +102,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                             renderItem={(task: Task) => {
                                 const statusConfig = STATUS_CONFIG[task.status];
                                 const commentCount = task.comments?.length || task.commentCount || 0;
-                                
+
                                 const dropdownItems = [
                                     {
                                         key: 'edit',
@@ -116,7 +116,6 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                         label: 'Delete',
                                         danger: true,
                                         onClick: () => {
-                                            // Handle delete - you may want to add a mutation for this
                                             Modal.confirm({
                                                 title: 'Delete task',
                                                 content: 'Are you sure you want to delete this task?',
@@ -128,7 +127,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                         },
                                     },
                                 ];
-                                
+
                                 return (
                                     <List.Item style={{ height: '100%' }}>
                                         <Card
@@ -143,7 +142,6 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                             }}
                                             styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column', height: '100%' } }}
                                         >
-
                                             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <Tag color={statusConfig.color} icon={statusConfig.icon}>
@@ -162,7 +160,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                         </span>
                                                     )}
                                                 </div>
-                                                
+
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                     <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
                                                         <div
@@ -174,7 +172,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                                 height: 24,
                                                                 borderRadius: 4,
                                                                 cursor: 'pointer',
-                                                                color: '#a3a3a3',
+                                                                color: colors.textLight,
                                                             }}
                                                             className="hover:bg-gray-200"
                                                         >
@@ -202,7 +200,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                             >
                                                 <Space size={12}>
                                                     <Tooltip title={`Created by ${task.user?.username}`}>
-                                                        <Avatar size="small" style={{ background: colors.accent, color: '#fff' }}>
+                                                        <Avatar size="small" style={{ background: colors.accent, color: colors.white }}>
                                                             {task.user?.username?.[0]?.toUpperCase()}
                                                         </Avatar>
                                                     </Tooltip>
@@ -230,7 +228,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                     />
                                                 ) : task.assignee ? (
                                                     <Tooltip title={`Assigned to ${task.assignee.username}`}>
-                                                        <Avatar size="small" style={{ background: colors.accent, color: '#fff' }}>
+                                                        <Avatar size="small" style={{ background: colors.accent, color: colors.white }}>
                                                             {task.assignee.username?.[0]?.toUpperCase()}
                                                         </Avatar>
                                                     </Tooltip>
@@ -309,8 +307,8 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                 {text}
                                             </div>
                                             {task.description && (
-                                                <div style={{ 
-                                                    color: colors.textMuted, 
+                                                <div style={{
+                                                    color: colors.textMuted,
                                                     fontSize: '0.75rem',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
@@ -342,12 +340,10 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                     dataIndex: 'createdAt',
                                     width: 130,
                                     render: (date: string) => (
-                                        <Space size={4} style={{ color: colors.textMuted }}>
-                                            <ClockCircleOutlined style={{ fontSize: '0.75rem' }} />
-                                            <span style={{ fontSize: '0.875rem' }}>
-                                                {formatDistanceToNow(date)}
-                                            </span>
-                                        </Space>
+                                        <span style={{ color: colors.textMuted, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                                            <ClockCircleOutlined style={{ fontSize: '0.75rem', marginRight: 4 }} />
+                                            {formatDistanceToNow(date)}
+                                        </span>
                                     )
                                 },
                                 {
@@ -357,9 +353,9 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                     align: 'center' as const,
                                     render: (user: any) => (
                                         <Tooltip title={user?.username || 'Unknown'}>
-                                            <Avatar 
-                                                size="small" 
-                                                style={{ background: colors.accent, color: '#fff' }}
+                                            <Avatar
+                                                size="small"
+                                                style={{ background: colors.accent, color: colors.white }}
                                             >
                                                 {user?.username?.[0]?.toUpperCase()}
                                             </Avatar>
@@ -388,7 +384,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                         }
                                         return assignee ? (
                                             <Tooltip title={`Assigned to ${assignee.username}`}>
-                                                <Avatar size="small" style={{ background: colors.accent, color: '#fff' }}>
+                                                <Avatar size="small" style={{ background: colors.accent, color: colors.white }}>
                                                     {assignee.username?.[0]?.toUpperCase()}
                                                 </Avatar>
                                             </Tooltip>
@@ -439,7 +435,7 @@ const WorkspaceTaskList = ({ workspace, currentUserId, viewMode = 'grid' }: Work
                                                             height: 24,
                                                             borderRadius: 4,
                                                             cursor: 'pointer',
-                                                            color: '#a3a3a3',
+                                                            color: colors.textLight,
                                                         }}
                                                         className="hover:bg-gray-200"
                                                     >

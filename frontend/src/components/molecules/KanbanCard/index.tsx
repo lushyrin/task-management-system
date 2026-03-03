@@ -7,16 +7,41 @@ import type { KanbanCardProps } from './KanbanCard.types.ts';
 
 const { Text } = Typography;
 
+const colors = {
+    text: '#171717',
+    textMuted: '#737373',
+    textLight: '#a3a3a3',
+    accent: '#eab308',
+    accentDark: '#713f12',
+    border: '#e5e5e5',
+    bg: '#fafafa',
+    white: '#ffffff',
+    green: '#22c55e',
+    red: '#ef4444',
+    gray: '#9ca3af',
+};
+
 const cardColors = [
     { bg: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)', label: 'yellow' },
     { bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)', label: 'pink' },
     { bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'orange' },
     { bg: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)', label: 'green' },
-    { bg: 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)', label: 'orange' },
     { bg: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)', label: 'purple' },
     { bg: 'linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)', label: 'teal' },
     { bg: 'linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%)', label: 'coral' },
 ];
+
+const PRIORITY_CONFIG = {
+    high: { bg: '#FEE2E2', color: '#DC2626', label: 'High' },
+    medium: { bg: '#FEF3C7', color: '#D97706', label: 'Medium' },
+    low: { bg: '#D1FAE5', color: '#059669', label: 'Low' },
+};
+
+const STATUS_LABELS = {
+    not_started: 'Not Started',
+    in_progress: 'In Progress',
+    done: 'Done',
+};
 
 interface KanbanCardExtendedProps extends KanbanCardProps {
     onUpdate?: (taskId: string, data: { title?: string; description?: string }) => void;
@@ -41,19 +66,7 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
     const colorIndex = parseInt(task.id.slice(-1), 16) % cardColors.length;
     const color = cardColors[colorIndex];
 
-    const statusLabel = {
-        not_started: 'Not Started',
-        in_progress: 'In Progress',
-        done: 'Done',
-    };
-
-    const priorityConfig = {
-        high: { bg: '#fee2e2', color: '#dc2626', label: 'High' },
-        medium: { bg: '#fef3c7', color: '#d97706', label: 'Medium' },
-        low: { bg: '#ecfdf5', color: '#059669', label: 'Low' },
-    };
-
-    const priority = task.priority ? priorityConfig[task.priority] : null;
+    const priority = task.priority ? PRIORITY_CONFIG[task.priority] : null;
 
     const handleSave = () => {
         if (editTitle.trim() && onUpdate) {
@@ -103,9 +116,6 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
         },
     ];
 
-    // Consistent card height calculation
-    const descriptionHeight = '2.4rem'; // Height for 2 lines of text
-
     return (
         <Card
             hoverable={!isEditing}
@@ -123,14 +133,13 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                     ? '0 8px 25px rgba(0, 0, 0, 0.15)'
                     : '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
                 transition: 'all 0.15s ease',
-                minHeight: '140px', // Minimum consistent height
+                minHeight: '140px',
             }}
         >
             <Space direction="vertical" className="w-full" size={10}>
-
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                        <Tooltip title={statusLabel[task.status]}>
+                        <Tooltip title={STATUS_LABELS[task.status]}>
                             <span
                                 style={{
                                     display: 'inline-flex',
@@ -139,8 +148,8 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                                     width: 10,
                                     height: 10,
                                     borderRadius: '50%',
-                                    background: task.status === 'done' ? '#22c55e' :
-                                        task.status === 'in_progress' ? '#eab308' : '#9ca3af',
+                                    background: task.status === 'done' ? colors.green :
+                                        task.status === 'in_progress' ? colors.accent : colors.gray,
                                 }}
                             />
                         </Tooltip>
@@ -170,14 +179,14 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleSave(); }}
                                     className="p-1 rounded hover:bg-black/10 transition-colors"
-                                    style={{ color: '#22c55e' }}
+                                    style={{ color: colors.green }}
                                 >
                                     <CheckOutlined style={{ fontSize: 14 }} />
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleCancel(); }}
                                     className="p-1 rounded hover:bg-black/10 transition-colors"
-                                    style={{ color: '#ef4444' }}
+                                    style={{ color: colors.red }}
                                 >
                                     <CloseOutlined style={{ fontSize: 14 }} />
                                 </button>
@@ -189,21 +198,20 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                                     className="cursor-grab active:cursor-grabbing p-1 hover:bg-black/5 rounded transition-colors"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <HolderOutlined style={{ color: '#9ca3af', fontSize: 14 }} />
+                                    <HolderOutlined style={{ color: colors.gray, fontSize: 14 }} />
                                 </div>
                                 <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
                                     <div
                                         onClick={(e) => e.stopPropagation()}
                                         className="p-1 hover:bg-black/5 rounded transition-colors cursor-pointer"
                                     >
-                                        <EllipsisOutlined style={{ color: '#9ca3af', fontSize: 14 }} />
+                                        <EllipsisOutlined style={{ color: colors.gray, fontSize: 14 }} />
                                     </div>
                                 </Dropdown>
                             </>
                         )}
                     </div>
                 </div>
-
 
                 {isEditing ? (
                     <Input
@@ -223,15 +231,14 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                             fontSize: '0.9rem',
                             lineHeight: 1.4,
                             fontWeight: 600,
-                            color: '#171717',
+                            color: colors.text,
                         }}
                     >
                         {task.title}
                     </Text>
                 )}
 
-
-                <div style={{ minHeight: descriptionHeight }}>
+                <div style={{ minHeight: '2.4rem' }}>
                     {isEditing ? (
                         <Input.TextArea
                             value={editDescription}
@@ -247,23 +254,21 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                         <Text
                             type="secondary"
                             style={{
-                                display: 'block',
                                 fontSize: '0.8rem',
                                 lineHeight: 1.4,
-                                color: task.description ? '#525252' : '#a3a3a3',
+                                color: task.description ? colors.textMuted : colors.textLight,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: 'vertical',
-                                minHeight: descriptionHeight,
+                                minHeight: '2.4rem',
                             }}
                         >
                             {task.description || 'No description'}
                         </Text>
                     )}
                 </div>
-
 
                 <div
                     className="flex items-center justify-between pt-2"
@@ -277,8 +282,8 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                             <Avatar
                                 size="small"
                                 style={{
-                                    background: '#facc15',
-                                    color: '#713f12',
+                                    background: colors.accent,
+                                    color: colors.accentDark,
                                     fontSize: '11px',
                                     fontWeight: 600,
                                     width: 24,
@@ -290,7 +295,7 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                         </Tooltip>
 
                         {task.comments && task.comments.length > 0 && (
-                            <Space size={2} style={{ color: '#737373' }}>
+                            <Space size={2} style={{ color: colors.textMuted }}>
                                 <MessageOutlined style={{ fontSize: 12 }} />
                                 <Text
                                     type="secondary"
@@ -309,7 +314,7 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                         type="secondary"
                         style={{
                             fontSize: '11px',
-                            color: '#a3a3a3',
+                            color: colors.textLight,
                             fontWeight: 500,
                         }}
                     >

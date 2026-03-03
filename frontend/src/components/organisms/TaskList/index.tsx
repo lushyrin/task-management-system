@@ -54,8 +54,8 @@ const TaskList: React.FC<TaskListProps> = ({
                 <div style={{ minWidth: 200 }}>
                     <div style={{ fontWeight: 500, marginBottom: task.description ? 4 : 0 }}>{text}</div>
                     {task.description && (
-                        <div style={{ 
-                            color: '#9ca3af', 
+                        <div style={{
+                            color: '#9ca3af',
                             fontSize: '0.75rem',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -84,12 +84,11 @@ const TaskList: React.FC<TaskListProps> = ({
             dataIndex: 'createdAt',
             width: 130,
             render: (date: string) => (
-                <Space size={4} style={{ color: '#9ca3af' }}>
-                    <ClockCircleOutlined style={{ fontSize: '0.75rem' }} />
-                    <span style={{ fontSize: '0.875rem' }}>
-                        {formatDistanceToNow(date)}
-                    </span>
-                </Space>
+                <span style={{ color: '#9ca3af', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                    <ClockCircleOutlined style={{ fontSize: '0.75rem', marginRight: 4 }} />
+                    {formatDistanceToNow(date)}
+                </span>
+
             )
         },
         {
@@ -99,9 +98,9 @@ const TaskList: React.FC<TaskListProps> = ({
             align: 'center' as const,
             render: (user: any) => (
                 <Tooltip title={user?.username || 'Unknown'}>
-                    <Avatar 
-                        size="small" 
-                        style={{ 
+                    <Avatar
+                        size="small"
+                        style={{
                             backgroundColor: '#fef08a',
                             color: '#713f12',
                             fontWeight: 600
