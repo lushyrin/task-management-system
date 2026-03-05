@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Divider, Spin, Typography, Space, Tag, Avatar, Tooltip, Input, Select, Modal } from 'antd';
-import { ArrowLeftOutlined, CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined, MinusCircleOutlined, EditOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
-import { PriorityBadge } from '@/components/atoms';
+import { ArrowLeftOutlined, CalendarOutlined, EditOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import { CommentList } from '@/components/organisms';
 import { useGetTaskById, useDeletetask } from '@/hooks/useTasks';
 import { useGetWorkspaceTask, useWorkspace } from '@/hooks/useWorkspace';
@@ -11,16 +10,10 @@ import { taskService } from '@/services/task.service';
 import { workspaceService } from '@/services/workspace.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from '@/utils/helpers';
-import type { TaskStatus } from '@/types';
+import { STATUS_CONFIG } from '@/utils/uiConfig';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
-
-const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
-    not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
-    in_progress: { color: "processing", icon: <ClockCircleOutlined />, label: "In Progress" },
-    done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
-};
 
 const TaskDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -222,7 +215,6 @@ const TaskDetail: React.FC = () => {
                             <Tag color={statusConfig.color} icon={statusConfig.icon} style={{ fontWeight: 500 }}>
                                 {statusConfig.label}
                             </Tag>
-                            {task.priority && <PriorityBadge priority={task.priority} />}
                         </Space>
 
                         <Space>

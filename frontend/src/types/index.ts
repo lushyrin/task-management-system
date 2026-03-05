@@ -8,7 +8,6 @@ export type {
 export type {
     Task,
     TaskStatus,
-    TaskPriority,
     TaskStats,
     CreateTaskRequest,
     UpdateTaskRequest,

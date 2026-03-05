@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Empty, Pagination, Space, Select, Typography, Table, Avatar, Tooltip } from 'antd';
-import { MessageOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { List, Empty, Pagination, Space, Select, Typography, Table, Dropdown, Modal } from 'antd';
+import { MessageOutlined, ClockCircleOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { TaskCard } from '@/components/molecules';
 import { StatusBadge } from '@/components/atoms';
+import { useDeletetask } from '@/hooks/useTasks';
 import type { Task, TaskStatus } from '@/types';
 import { formatDistanceToNow } from '@/utils/helpers';
 
 const { Text } = Typography;
 const { Option } = Select;
 
+const colors = {
+    text: '#171717',
+    textMuted: '#9ca3af',
+    textLight: '#a3a3a3',
+    accent: '#eab308',
+    white: '#ffffff',
+};
+
 interface TaskListProps {
     tasks: Task[];
     isLoading?: boolean;
     viewMode?: 'grid' | 'list';
-    onStatusChange?: (taskId: string, status: TaskStatus) => void;
 }
 
 const TaskList: React.FC<TaskListProps> = ({
@@ -23,6 +31,7 @@ const TaskList: React.FC<TaskListProps> = ({
     viewMode = 'grid',
 }) => {
     const navigate = useNavigate();
+    const deleteTask = useDeletetask();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
@@ -33,39 +42,64 @@ const TaskList: React.FC<TaskListProps> = ({
 
     const total = filteredTasks.length;
     const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+    const paginatedTasks = filteredTasks.slice(startIndex, startIndex + pageSize);
 
     const handleTaskClick = (task: Task) => {
         navigate(`/tasks/${task.id}`);
     };
 
+    const handleDelete = (task: Task) => {
+        Modal.confirm({
+            title: 'Delete task',
+            content: 'Are you sure you want to delete this task?',
+            okText: 'Delete',
+            okButtonProps: { danger: true, loading: deleteTask.isPending },
+            cancelText: 'Cancel',
+            onOk: () => deleteTask.mutate(task.id),
+        });
+    };
+
+    const buildDropdownItems = (task: Task) => [
+        {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Edit',
+            onClick: () => navigate(`/tasks/${task.id}`),
+        },
+        {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Delete',
+            danger: true,
+            onClick: () => handleDelete(task),
+        },
+    ];
+
     const columns = [
         {
             title: 'Status',
             dataIndex: 'status',
-            width: 110,
-            render: (status: TaskStatus) => <StatusBadge status={status} />
+            width: 130,
+            render: (status: TaskStatus) => <StatusBadge status={status} />,
         },
         {
             title: 'Title',
             dataIndex: 'title',
             render: (text: string, task: Task) => (
-                <div style={{ minWidth: 200 }}>
-                    <div style={{ fontWeight: 500, marginBottom: task.description ? 4 : 0 }}>{text}</div>
-                    {task.description && (
-                        <div style={{
-                            color: '#9ca3af',
-                            fontSize: '0.75rem',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                        }}>
-                            {task.description}
-                        </div>
-                    )}
+                <div style={{ minWidth: 200, maxWidth: 480 }}>
+                    <div style={{ fontWeight: 500, color: colors.text }}>{text}</div>
+                    <div style={{
+                        color: colors.textMuted,
+                        fontSize: '0.75rem',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        visibility: task.description ? 'visible' : 'hidden',
+                    }}>
+                        {task.description || '\u00A0'}
+                    </div>
                 </div>
-            )
+            ),
         },
         {
             title: 'Comments',
@@ -73,53 +107,56 @@ const TaskList: React.FC<TaskListProps> = ({
             width: 90,
             align: 'center' as const,
             render: (comments: any[]) => comments?.length > 0 ? (
-                <Space size={4} style={{ color: '#9ca3af' }}>
+                <Space size={4} style={{ color: colors.textMuted }}>
                     <MessageOutlined />
                     <span>{comments.length}</span>
                 </Space>
-            ) : '—'
+            ) : '—',
         },
         {
             title: 'Created',
             dataIndex: 'createdAt',
             width: 130,
             render: (date: string) => (
-                <span style={{ color: '#9ca3af', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                <span style={{ color: colors.textMuted, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                     <ClockCircleOutlined style={{ fontSize: '0.75rem', marginRight: 4 }} />
                     {formatDistanceToNow(date)}
                 </span>
-
-            )
+            ),
         },
+
         {
-            title: 'Assignee',
-            dataIndex: 'user',
-            width: 80,
+            // Replaces Assignee column — actions dropdown
+            title: '',
+            key: 'actions',
+            width: 50,
             align: 'center' as const,
-            render: (user: any) => (
-                <Tooltip title={user?.username || 'Unknown'}>
-                    <Avatar
-                        size="small"
-                        style={{
-                            backgroundColor: '#fef08a',
-                            color: '#713f12',
-                            fontWeight: 600
-                        }}
+            render: (_: any, task: Task) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Dropdown
+                        menu={{ items: buildDropdownItems(task) }}
+                        trigger={['click']}
+                        placement="bottomRight"
                     >
-                        {user?.username?.charAt(0).toUpperCase()}
-                    </Avatar>
-                </Tooltip>
-            )
-        }
+                        <div
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: 28, height: 28, borderRadius: 6,
+                                cursor: 'pointer', color: colors.textLight,
+                                margin: '0 auto',
+                            }}
+                            className="hover:bg-gray-100"
+                        >
+                            <EllipsisOutlined style={{ fontSize: 16 }} />
+                        </div>
+                    </Dropdown>
+                </div>
+            ),
+        },
     ];
 
     if (!isLoading && tasks.length === 0) {
-        return (
-            <Empty
-                description="No tasks yet"
-                className="py-12"
-            />
-        );
+        return <Empty description="No tasks yet" className="py-12" />;
     }
 
     return (
@@ -153,28 +190,18 @@ const TaskList: React.FC<TaskListProps> = ({
                     scroll={{ x: 'max-content' }}
                     onRow={(task) => ({
                         onClick: () => handleTaskClick(task),
-                        style: { cursor: 'pointer' }
+                        style: { cursor: 'pointer' },
                     })}
                     rowClassName="hover:bg-gray-50"
                 />
             ) : (
                 <List
-                    grid={{
-                        gutter: 16,
-                        xs: 1,
-                        sm: 1,
-                        md: 2,
-                        lg: 2,
-                        xl: 3,
-                    }}
+                    grid={{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 2, xl: 3 }}
                     dataSource={paginatedTasks}
                     loading={isLoading}
                     renderItem={(task) => (
                         <List.Item>
-                            <TaskCard
-                                task={task}
-                                onClick={handleTaskClick}
-                            />
+                            <TaskCard task={task} onClick={handleTaskClick} />
                         </List.Item>
                     )}
                 />

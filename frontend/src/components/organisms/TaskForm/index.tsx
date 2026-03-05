@@ -50,15 +50,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
             open={visible}
             onCancel={onCancel}
             footer={null}
-            destroyOnClose
+            destroyOnHidden
         >
             <Form
                 form={form}
                 layout="vertical"
                 onFinish={handleSubmit}
-                initialValues={{
-                    status: 'not_started',
-                }}
+                initialValues={{ status: 'not_started' }}
             >
                 <Form.Item
                     name="title"
@@ -74,14 +72,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 <Form.Item
                     name="description"
                     label="Description"
-                    rules={[
-                        { max: 2000, message: 'Description must be less than 2000 characters' },
-                    ]}
+                    rules={[{ max: 2000, message: 'Description must be less than 2000 characters' }]}
                 >
-                    <TextArea
-                        rows={4}
-                        placeholder="Enter task description (optional)"
-                    />
+                    <TextArea rows={4} placeholder="Enter task description (optional)" />
                 </Form.Item>
 
                 {isEditMode && (
@@ -100,14 +93,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
                 <Form.Item className="mb-0 flex justify-end">
                     <Space>
-                        <Button onClick={onCancel}>
-                            Cancel
-                        </Button>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={isLoading}
-                        >
+                        <Button onClick={onCancel}>Cancel</Button>
+                        <Button type="primary" htmlType="submit" loading={isLoading}>
                             {isEditMode ? 'Update' : 'Create'}
                         </Button>
                     </Space>

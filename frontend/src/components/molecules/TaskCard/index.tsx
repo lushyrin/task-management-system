@@ -1,7 +1,8 @@
 import { Card, Space, Avatar, Tooltip, Dropdown, Modal, Tag } from 'antd';
-import { MessageOutlined, ClockCircleOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import type { Task, TaskStatus, TaskPriority } from '@/types';
+import { MessageOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import type { Task, TaskStatus } from '@/types';
 import { formatDistanceToNow } from '@/utils/helpers';
+import { STATUS_CONFIG } from '@/utils/uiConfig';
 import { useDeletetask } from '@/hooks/useTasks';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,27 +13,16 @@ const colors = {
     accent: '#eab308',
     border: '#e5e5e5',
     bg: '#fafafa',
-    bgHover: '#f5f5f5',
     white: '#ffffff',
 };
 
-const PRIORITY_CONFIG: Record<TaskPriority, { bg: string; color: string; label: string }> = {
-    high: { bg: '#FEE2E2', color: '#DC2626', label: 'High' },
-    medium: { bg: '#FEF3C7', color: '#D97706', label: 'Medium' },
-    low: { bg: '#D1FAE5', color: '#059669', label: 'Low' },
-};
-
-const STATUS_CONFIG: Record<TaskStatus, { color: string; icon: React.ReactNode; label: string }> = {
-    not_started: { color: "default", icon: <MinusCircleOutlined />, label: "Not Started" },
-    in_progress: { color: "processing", icon: <ClockCircleOutlined />, label: "In Progress" },
-    done: { color: "success", icon: <CheckCircleOutlined />, label: "Done" },
-};
+// lineHeight 1.5 × font-size 0.875rem × 2 lines ≈ 42px
+const DESCRIPTION_MIN_HEIGHT = '2.625rem';
 
 interface TaskCardProps {
     task: Task;
     onClick?: (task: Task) => void;
     viewMode?: 'grid' | 'list';
-    showPriority?: boolean;
     showAssignee?: boolean;
     workspaceId?: string;
 }
@@ -41,7 +31,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     task,
     onClick,
     viewMode = 'grid',
-    showPriority = true,
     showAssignee = false,
     workspaceId,
 }) => {
@@ -67,38 +56,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
     };
 
     const dropdownItems = [
-        {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: 'Edit',
-            onClick: handleEdit,
-        },
-        {
-            key: 'delete',
-            icon: <DeleteOutlined />,
-            label: 'Delete',
-            danger: true,
-            onClick: handleDelete,
-        },
+        { key: 'edit', icon: <EditOutlined />, label: 'Edit', onClick: handleEdit },
+        { key: 'delete', icon: <DeleteOutlined />, label: 'Delete', danger: true, onClick: handleDelete },
     ];
-
-    const renderPriority = () => {
-        if (!task.priority) return null;
-        const config = PRIORITY_CONFIG[task.priority];
-        return (
-            <span style={{
-                padding: viewMode === 'list' ? '2px 6px' : '2px 8px',
-                borderRadius: '4px',
-                fontSize: viewMode === 'list' ? '10px' : '11px',
-                fontWeight: 600,
-                background: config.bg,
-                color: config.color,
-                flexShrink: 0,
-            }}>
-                {config.label}
-            </span>
-        );
-    };
 
     const renderCommentCount = () => {
         const count = task.comments?.length || task.commentCount || 0;
@@ -122,37 +82,79 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </Tooltip>
             );
         }
-        return (
-            <span style={{ color: colors.textMuted, fontSize: '0.75rem', flexShrink: 0 }}>Unassigned</span>
-        );
+        return <span style={{ color: colors.textMuted, fontSize: '0.75rem', flexShrink: 0 }}>Unassigned</span>;
     };
 
     const statusConfig = STATUS_CONFIG[task.status];
 
-    // List View
+    const actionsDropdown = (
+        <div onClick={(e) => e.stopPropagation()}>
+            <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
+                <div
+                    style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 24, height: 24, borderRadius: 4, cursor: 'pointer', color: colors.textLight,
+                    }}
+                    className="hover:bg-gray-200"
+                >
+                    <EllipsisOutlined style={{ fontSize: 16 }} />
+                </div>
+            </Dropdown>
+        </div>
+    );
+
+    // ── LIST VIEW ─────────────────────────────────────────────────────────────
     if (viewMode === 'list') {
         return (
             <div
                 onClick={() => onClick?.(task)}
-                className="rounded-xl px-4 py-3 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer"
-                style={{ background: colors.bg, border: `1px solid ${colors.border}` }}
+                className="rounded-xl px-4 hover:shadow-md transition-shadow cursor-pointer"
+                style={{
+                    background: colors.bg,
+                    border: `1px solid ${colors.border}`,
+                    height: 64,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                }}
             >
-                <Tag color={statusConfig.color} icon={statusConfig.icon} className="text-xs! shrink-0">
+                <Tag
+                    color={statusConfig.color}
+                    icon={statusConfig.icon}
+                    className="shrink-0"
+                    style={{ fontSize: '11px', margin: 0 }}
+                >
                     {statusConfig.label}
                 </Tag>
 
-                {showPriority && renderPriority()}
-
-                <div className="flex-1 min-w-0">
-                    <p style={{ color: colors.text, fontWeight: 500 }} className="truncate">{task.title}</p>
-                    {task.description && (
-                        <p style={{ color: colors.textMuted, fontSize: '0.75rem' }} className="truncate">
-                            {task.description}
-                        </p>
-                    )}
+                {/* Title + description stacked — description hidden but space reserved when absent */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                        color: colors.text,
+                        fontWeight: 500,
+                        margin: 0,
+                        lineHeight: 1.4,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}>
+                        {task.title}
+                    </p>
+                    <p style={{
+                        color: colors.textMuted,
+                        fontSize: '0.75rem',
+                        margin: 0,
+                        lineHeight: 1.4,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        visibility: task.description ? 'visible' : 'hidden',
+                    }}>
+                        {task.description || '\u00A0'}
+                    </p>
                 </div>
 
-                <span style={{ color: colors.textMuted, fontSize: '11px', flexShrink: 0 }}>
+                <span style={{ color: colors.textMuted, fontSize: '11px', flexShrink: 0, whiteSpace: 'nowrap' }}>
                     {formatDistanceToNow(task.createdAt)}
                 </span>
 
@@ -165,31 +167,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </Tooltip>
 
                 {showAssignee && renderAssignee()}
-
-                <div onClick={(e) => e.stopPropagation()}>
-                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 24,
-                                height: 24,
-                                borderRadius: 4,
-                                cursor: 'pointer',
-                                color: colors.textLight,
-                            }}
-                            className="hover:bg-gray-200"
-                        >
-                            <EllipsisOutlined style={{ fontSize: 16 }} />
-                        </div>
-                    </Dropdown>
-                </div>
+                {actionsDropdown}
             </div>
         );
     }
 
-    // Grid View
+    // ── GRID VIEW ─────────────────────────────────────────────────────────────
     return (
         <Card
             hoverable
@@ -200,46 +183,46 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 background: colors.bg,
                 height: '100%',
             }}
-            styles={{ body: { padding: 16, display: 'flex', flexDirection: 'column', height: '100%' } }}
+            styles={{
+                body: { padding: 16, display: 'flex', flexDirection: 'column', height: '100%' }
+            }}
         >
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <Tag color={statusConfig.color} icon={statusConfig.icon}>
-                        {statusConfig.label}
-                    </Tag>
-                    {showPriority && renderPriority()}
+                    <Tag color={statusConfig.color} icon={statusConfig.icon}>{statusConfig.label}</Tag>
                 </div>
-
-                <div onClick={(e) => e.stopPropagation()}>
-                    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 24,
-                                height: 24,
-                                borderRadius: 4,
-                                cursor: 'pointer',
-                                color: colors.textLight,
-                            }}
-                            className="hover:bg-gray-200"
-                        >
-                            <EllipsisOutlined style={{ fontSize: 16 }} />
-                        </div>
-                    </Dropdown>
-                </div>
+                {actionsDropdown}
             </div>
 
-            <div style={{ flex: 1 }}>
-                <h4 style={{ color: colors.text, fontWeight: 600, marginBottom: 4 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <h4 style={{
+                    color: colors.text,
+                    fontWeight: 600,
+                    marginBottom: 6,
+                    lineHeight: 1.4,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                }}>
                     {task.title}
                 </h4>
-                {task.description && (
-                    <p style={{ color: colors.textMuted, fontSize: '0.875rem' }}>
-                        {task.description}
-                    </p>
-                )}
+
+                {/* Always reserves exactly 2 lines — invisible when no description */}
+                <p style={{
+                    color: colors.textMuted,
+                    fontSize: '0.875rem',
+                    margin: 0,
+                    lineHeight: 1.5,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    minHeight: DESCRIPTION_MIN_HEIGHT,
+                    visibility: task.description ? 'visible' : 'hidden',
+                }}>
+                    {task.description || '\u00A0'}
+                </p>
             </div>
 
             <div
@@ -257,12 +240,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     </span>
                     {renderCommentCount()}
                 </Space>
-
-                {showAssignee && (
-                    <Space size={8}>
-                        {renderAssignee()}
-                    </Space>
-                )}
+                {showAssignee && <Space size={8}>{renderAssignee()}</Space>}
             </div>
         </Card>
     );

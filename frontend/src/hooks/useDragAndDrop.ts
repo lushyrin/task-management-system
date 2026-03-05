@@ -16,7 +16,7 @@ interface ColumnData {
 
 const COLUMN_DEF: { id: TaskStatus; title: string }[] = [
     { id: 'not_started', title: "Not Started" },
-    { id: 'in_progress', title: 'In Proress' },
+    { id: 'in_progress', title: 'In Progress' },
     { id: 'done', title: 'Done' }
 ]
 
@@ -59,7 +59,6 @@ export function useDragAndDrop(tasks: Task[]) {
             setOptimisticTasks(null);
         },
         onError: (error: Error) => {
-            // Roll back optimistic update
             setOptimisticTasks(null);
             queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEY });
             message.error(error.message || 'Failed to move task. Please try again.');

@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Typography, Space, Avatar, Tooltip, Input, Dropdown } from 'antd';
-import { MessageOutlined, UserOutlined, HolderOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { Card, Typography, Space, Avatar, Tooltip, Dropdown, Popconfirm } from 'antd';
+import { MessageOutlined, UserOutlined, HolderOutlined, EditOutlined, DeleteOutlined, EllipsisOutlined } from '@ant-design/icons';
 import { formatDistanceToNow } from '@/utils/helpers';
 import type { KanbanCardProps } from './KanbanCard.types.ts';
 
@@ -31,17 +30,14 @@ const cardColors = [
     { bg: 'linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%)', label: 'coral' },
 ];
 
-const PRIORITY_CONFIG = {
-    high: { bg: '#FEE2E2', color: '#DC2626', label: 'High' },
-    medium: { bg: '#FEF3C7', color: '#D97706', label: 'Medium' },
-    low: { bg: '#D1FAE5', color: '#059669', label: 'Low' },
-};
-
 const STATUS_LABELS = {
     not_started: 'Not Started',
     in_progress: 'In Progress',
     done: 'Done',
 };
+
+// lineHeight 1.4 × font-size 0.8rem × 2 lines ≈ 36px
+const DESCRIPTION_MIN_HEIGHT = '2.24rem';
 
 interface KanbanCardExtendedProps extends KanbanCardProps {
     onUpdate?: (taskId: string, data: { title?: string; description?: string }) => void;
@@ -58,39 +54,15 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
     workspaceId,
 }) => {
     const navigate = useNavigate();
-    const [isEditing, setIsEditing] = useState(false);
-    const [editTitle, setEditTitle] = useState(task.title);
-    const [editDescription, setEditDescription] = useState(task.description || '');
-    const titleInputRef = useRef<any>(null);
 
     const colorIndex = parseInt(task.id.slice(-1), 16) % cardColors.length;
     const color = cardColors[colorIndex];
 
-    const priority = task.priority ? PRIORITY_CONFIG[task.priority] : null;
-
-    const handleSave = () => {
-        if (editTitle.trim() && onUpdate) {
-            onUpdate(task.id, {
-                title: editTitle.trim(),
-                description: editDescription.trim(),
-            });
-        }
-        setIsEditing(false);
-    };
-
-    const handleCancel = () => {
-        setEditTitle(task.title);
-        setEditDescription(task.description || '');
-        setIsEditing(false);
-    };
-
     const handleCardClick = () => {
-        if (!isEditing) {
-            const url = workspaceId
-                ? `/tasks/${task.id}?workspace=${workspaceId}`
-                : `/tasks/${task.id}`;
-            navigate(url);
-        }
+        const url = workspaceId
+            ? `/tasks/${task.id}?workspace=${workspaceId}`
+            : `/tasks/${task.id}`;
+        navigate(url);
     };
 
     const dropdownItems = [
@@ -100,31 +72,36 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
             label: 'Edit',
             onClick: (e: any) => {
                 e.domEvent.stopPropagation();
-                setIsEditing(true);
-                setTimeout(() => titleInputRef.current?.focus(), 0);
+                handleCardClick();
             },
         },
         {
             key: 'delete',
             icon: <DeleteOutlined />,
-            label: 'Delete',
+            label: (
+                <Popconfirm
+                    title="Delete task"
+                    description="Are you sure you want to delete this task?"
+                    onConfirm={(e) => { e?.stopPropagation(); onDelete?.(task.id); }}
+                    onCancel={(e) => e?.stopPropagation()}
+                    okText="Delete"
+                    okButtonProps={{ danger: true }}
+                    cancelText="Cancel"
+                >
+                    <span onClick={(e) => e.stopPropagation()}>Delete</span>
+                </Popconfirm>
+            ),
             danger: true,
-            onClick: (e: any) => {
-                e.domEvent.stopPropagation();
-                onDelete?.(task.id);
-            },
+            onClick: (e: any) => { e.domEvent.stopPropagation(); },
         },
     ];
 
     return (
         <Card
-            hoverable={!isEditing}
+            hoverable
             className={`animate-fade-in ${isDragging ? 'dragging' : ''}`}
             onClick={handleCardClick}
-            bodyStyle={{
-                padding: 14,
-                background: 'transparent',
-            }}
+            styles={{ body: { padding: 14, background: 'transparent' } }}
             style={{
                 background: color.bg,
                 borderRadius: '8px',
@@ -133,161 +110,85 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                     ? '0 8px 25px rgba(0, 0, 0, 0.15)'
                     : '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
                 transition: 'all 0.15s ease',
-                minHeight: '140px',
             }}
         >
             <Space direction="vertical" className="w-full" size={10}>
+
+                {/* ── Top row: status dot + priority + controls ── */}
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                         <Tooltip title={STATUS_LABELS[task.status]}>
-                            <span
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: '50%',
-                                    background: task.status === 'done' ? colors.green :
-                                        task.status === 'in_progress' ? colors.accent : colors.gray,
-                                }}
-                            />
+                            <span style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                width: 10, height: 10, borderRadius: '50%',
+                                background: task.status === 'done' ? colors.green
+                                    : task.status === 'in_progress' ? colors.accent
+                                        : colors.gray,
+                            }} />
                         </Tooltip>
 
-                        {priority && (
-                            <span
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '3px',
-                                    padding: '2px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    background: priority.bg,
-                                    color: priority.color,
-                                }}
-                            >
-                                {priority.label}
-                            </span>
-                        )}
                     </div>
 
                     <div className="flex items-center gap-1">
-                        {isEditing ? (
-                            <Space size={4}>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleSave(); }}
-                                    className="p-1 rounded hover:bg-black/10 transition-colors"
-                                    style={{ color: colors.green }}
-                                >
-                                    <CheckOutlined style={{ fontSize: 14 }} />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleCancel(); }}
-                                    className="p-1 rounded hover:bg-black/10 transition-colors"
-                                    style={{ color: colors.red }}
-                                >
-                                    <CloseOutlined style={{ fontSize: 14 }} />
-                                </button>
-                            </Space>
-                        ) : (
-                            <>
-                                <div
-                                    {...dragHandleProps}
-                                    className="cursor-grab active:cursor-grabbing p-1 hover:bg-black/5 rounded transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <HolderOutlined style={{ color: colors.gray, fontSize: 14 }} />
-                                </div>
-                                <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
-                                    <div
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="p-1 hover:bg-black/5 rounded transition-colors cursor-pointer"
-                                    >
-                                        <EllipsisOutlined style={{ color: colors.gray, fontSize: 14 }} />
-                                    </div>
-                                </Dropdown>
-                            </>
-                        )}
+                        <div
+                            {...dragHandleProps}
+                            className="cursor-grab active:cursor-grabbing p-1 hover:bg-black/5 rounded transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <HolderOutlined style={{ color: colors.gray, fontSize: 14 }} />
+                        </div>
+                        <Dropdown menu={{ items: dropdownItems }} trigger={['click']} placement="bottomRight">
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-1 hover:bg-black/5 rounded transition-colors cursor-pointer"
+                            >
+                                <EllipsisOutlined style={{ color: colors.gray, fontSize: 14 }} />
+                            </div>
+                        </Dropdown>
                     </div>
                 </div>
 
-                {isEditing ? (
-                    <Input
-                        ref={titleInputRef}
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        onPressEnter={handleSave}
-                        onClick={(e) => e.stopPropagation()}
-                        size="small"
-                        style={{ fontWeight: 600, fontSize: '0.9rem' }}
-                    />
-                ) : (
-                    <Text
-                        strong
-                        style={{
-                            display: 'block',
-                            fontSize: '0.9rem',
-                            lineHeight: 1.4,
-                            fontWeight: 600,
-                            color: colors.text,
-                        }}
-                    >
-                        {task.title}
-                    </Text>
-                )}
+                {/* ── Title ── */}
+                <Text strong style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    fontSize: '0.9rem',
+                    lineHeight: 1.4,
+                    fontWeight: 600,
+                    color: colors.text,
+                }}>
+                    {task.title}
+                </Text>
 
-                <div style={{ minHeight: '2.4rem' }}>
-                    {isEditing ? (
-                        <Input.TextArea
-                            value={editDescription}
-                            onChange={(e) => setEditDescription(e.target.value)}
-                            onPressEnter={(e) => { e.preventDefault(); handleSave(); }}
-                            onClick={(e) => e.stopPropagation()}
-                            size="small"
-                            rows={2}
-                            placeholder="Add description..."
-                            style={{ fontSize: '0.8rem', resize: 'none' }}
-                        />
-                    ) : (
-                        <Text
-                            type="secondary"
-                            style={{
-                                fontSize: '0.8rem',
-                                lineHeight: 1.4,
-                                color: task.description ? colors.textMuted : colors.textLight,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                minHeight: '2.4rem',
-                            }}
-                        >
-                            {task.description || 'No description'}
-                        </Text>
-                    )}
+                {/* ── Description ── */}
+                <div style={{
+                    fontSize: '0.8rem',
+                    lineHeight: 1.4,
+                    color: colors.textMuted,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    minHeight: DESCRIPTION_MIN_HEIGHT,
+                    visibility: task.description ? 'visible' : 'hidden',
+                }}>
+                    {task.description || '\u00A0'}
                 </div>
 
+                {/* ── Footer ── */}
                 <div
                     className="flex items-center justify-between pt-2"
-                    style={{
-                        borderTop: '1px solid rgba(0,0,0,0.06)',
-                        marginTop: 'auto',
-                    }}
+                    style={{ borderTop: '1px solid rgba(0,0,0,0.06)', marginTop: 'auto' }}
                 >
                     <Space size={8}>
                         <Tooltip title={task.user?.username || 'Unknown'}>
                             <Avatar
                                 size="small"
                                 style={{
-                                    background: colors.accent,
-                                    color: colors.accentDark,
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    width: 24,
-                                    height: 24,
+                                    background: colors.accent, color: colors.accentDark,
+                                    fontSize: '11px', fontWeight: 600, width: 24, height: 24,
                                 }}
                             >
                                 {task.user?.username?.charAt(0).toUpperCase() || <UserOutlined />}
@@ -297,27 +198,14 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
                         {task.comments && task.comments.length > 0 && (
                             <Space size={2} style={{ color: colors.textMuted }}>
                                 <MessageOutlined style={{ fontSize: 12 }} />
-                                <Text
-                                    type="secondary"
-                                    style={{
-                                        fontSize: '11px',
-                                        fontWeight: 500,
-                                    }}
-                                >
+                                <Text type="secondary" style={{ fontSize: '11px', fontWeight: 500 }}>
                                     {task.comments.length}
                                 </Text>
                             </Space>
                         )}
                     </Space>
 
-                    <Text
-                        type="secondary"
-                        style={{
-                            fontSize: '11px',
-                            color: colors.textLight,
-                            fontWeight: 500,
-                        }}
-                    >
+                    <Text type="secondary" style={{ fontSize: '11px', color: colors.textLight, fontWeight: 500 }}>
                         {formatDistanceToNow(task.createdAt)}
                     </Text>
                 </div>

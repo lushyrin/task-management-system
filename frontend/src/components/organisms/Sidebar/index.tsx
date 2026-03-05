@@ -7,6 +7,7 @@ import {
     TeamOutlined,
     LoginOutlined,
     UnorderedListOutlined,
+    CloseOutlined,
 } from "@ant-design/icons";
 import { Modal, Form, Input, Tabs, Spin, Tooltip, Avatar, Button } from "antd";
 import { useWorkspaces, useCreateWorkspace, useJoinWorkspace } from "../../../hooks/useWorkspace";
@@ -31,7 +32,12 @@ const colors = {
     white: '#ffffff',
 };
 
-const Sidebar = () => {
+interface SidebarProps {
+    mobileOpen?: boolean;
+    onClose?: () => void;
+}
+
+const Sidebar = ({ mobileOpen = false, onClose }: SidebarProps) => {
     const navigate = useNavigate();
     const location = useLocation();
     const query = useQuery();
@@ -100,7 +106,7 @@ const Sidebar = () => {
         onClick: () => void;
     }) => (
         <div
-            onClick={onClick}
+            onClick={() => { onClick(); onClose?.(); }}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 mx-2"
             style={{
                 background: isActive ? colors.accent : 'transparent',
@@ -120,16 +126,38 @@ const Sidebar = () => {
 
     return (
         <>
+            {/* Backdrop */}
+            {mobileOpen && (
+                <div
+                    className="md:hidden fixed inset-0 z-40"
+                    style={{ background: 'rgba(0,0,0,0.4)' }}
+                    onClick={onClose}
+                />
+            )}
+
             <aside
-                className="w-64 shrink-0 flex flex-col h-screen sticky top-0"
+                className={[
+                    'w-64 flex flex-col h-screen',
+                    'fixed top-0 left-0 z-50 transition-transform duration-300 ease-in-out',
+                    mobileOpen ? 'translate-x-0' : '-translate-x-full',
+                    'md:sticky md:shrink-0 md:translate-x-0',
+                ].join(' ')}
                 style={{ background: colors.sidebarBg, borderRight: `1px solid ${colors.border}` }}
             >
-
-                <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${colors.border}` }}>
-                    <img src="/logo.png" alt="MiniTask" style={{ height: 32, width: 32 }} />
-                    <span style={{ fontSize: '1.25rem', fontWeight: 700, color: colors.text }}>
-                        MiniTask
-                    </span>
+                <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <div className="flex items-center gap-3">
+                        <img src="/logo.png" alt="MiniTask" style={{ height: 32, width: 32 }} />
+                        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: colors.text }}>
+                            MiniTask
+                        </span>
+                    </div>
+                    <button
+                        className="md:hidden p-1 rounded"
+                        onClick={onClose}
+                        style={{ color: colors.textMuted }}
+                    >
+                        <CloseOutlined />
+                    </button>
                 </div>
 
 

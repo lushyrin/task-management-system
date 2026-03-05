@@ -44,12 +44,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     return (
         <div
             className="kanban-column"
-            style={{
-                background: colors.bg,
-                borderRadius: '12px',
-                padding: '14px',
-                border: '1px solid #e5e5e5',
-            }}>
+            style={{ background: colors.bg }}>
             <div
                 className="kanban-column-header"
                 style={{
@@ -102,9 +97,11 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         style={{
+                            flex: 1,
+                            overflowY: 'auto',
                             minHeight: '200px',
                             borderRadius: '8px',
-                            transition: 'all 0.2s',
+                            transition: 'background 0.2s, border 0.2s',
                             background: snapshot.isDraggingOver ? 'rgba(250, 204, 21, 0.1)' : 'transparent',
                             border: snapshot.isDraggingOver ? '2px dashed #facc15' : '2px dashed transparent',
                             padding: '4px',
