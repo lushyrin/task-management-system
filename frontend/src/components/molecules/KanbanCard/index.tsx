@@ -49,7 +49,7 @@ const KanbanCard: React.FC<KanbanCardExtendedProps> = ({
     task,
     isDragging = false,
     dragHandleProps,
-    onUpdate,
+    // onUpdate,
     onDelete,
     workspaceId,
 }) => {

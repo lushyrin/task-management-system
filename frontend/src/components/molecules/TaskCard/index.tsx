@@ -1,6 +1,6 @@
 import { Card, Space, Avatar, Tooltip, Dropdown, Modal, Tag } from 'antd';
 import { MessageOutlined, EllipsisOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { Task, TaskStatus } from '@/types';
+import type { Task } from '@/types';
 import { formatDistanceToNow } from '@/utils/helpers';
 import { STATUS_CONFIG } from '@/utils/uiConfig';
 import { useDeletetask } from '@/hooks/useTasks';
@@ -16,7 +16,6 @@ const colors = {
     white: '#ffffff',
 };
 
-// lineHeight 1.5 × font-size 0.875rem × 2 lines ≈ 42px
 const DESCRIPTION_MIN_HEIGHT = '2.625rem';
 
 interface TaskCardProps {
@@ -103,7 +102,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
     );
 
-    // ── LIST VIEW ─────────────────────────────────────────────────────────────
     if (viewMode === 'list') {
         return (
             <div
@@ -127,7 +125,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     {statusConfig.label}
                 </Tag>
 
-                {/* Title + description stacked — description hidden but space reserved when absent */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
                         color: colors.text,
@@ -172,7 +169,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         );
     }
 
-    // ── GRID VIEW ─────────────────────────────────────────────────────────────
     return (
         <Card
             hoverable
@@ -208,7 +204,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     {task.title}
                 </h4>
 
-                {/* Always reserves exactly 2 lines — invisible when no description */}
                 <p style={{
                     color: colors.textMuted,
                     fontSize: '0.875rem',

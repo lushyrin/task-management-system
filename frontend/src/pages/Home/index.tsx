@@ -8,6 +8,8 @@ import {
     DragOutlined,
     MessageOutlined,
     HolderOutlined,
+    CheckOutlined,
+    CloseOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -36,6 +38,64 @@ const Home = () => {
             icon: <BarChartOutlined className="text-3xl" style={{ color: '#f97316' }} />,
             title: 'Progress Tracking',
             description: 'Monitor your progress with real-time statistics.',
+        },
+    ];
+
+    const plans = [
+        {
+            name: 'Free',
+            price: '$0',
+            period: 'forever',
+            description: 'Perfect for individuals getting started.',
+            accent: '#e5e5e5',
+            accentText: '#525252',
+            highlight: false,
+            features: [
+                { text: 'Up to 20 tasks', included: true },
+                { text: '1 workspace', included: true },
+                { text: 'Kanban board', included: true },
+                { text: 'Basic comments', included: true },
+                { text: 'Team collaboration', included: false },
+            ],
+            cta: 'Get Started Free',
+            ctaVariant: 'outline' as const,
+        },
+        {
+            name: 'Pro',
+            price: '$9',
+            period: 'per month',
+            description: 'For professionals who need more power.',
+            accent: '#eab308',
+            accentText: '#713f12',
+            highlight: true,
+            badge: 'Most Popular',
+            features: [
+                { text: 'Unlimited tasks', included: true },
+                { text: 'Up to 5 workspaces', included: true },
+                { text: 'Kanban board', included: true },
+                { text: 'Full comment threads', included: true },
+                { text: 'Team collaboration', included: true },
+            ],
+            cta: 'Start Pro Trial',
+            ctaVariant: 'primary' as const,
+        },
+        {
+            name: 'Team',
+            price: '$29',
+            period: 'per month',
+            description: 'Built for teams that move fast together.',
+            accent: '#171717',
+            accentText: '#ffffff',
+            highlight: false,
+            features: [
+                { text: 'Unlimited tasks', included: true },
+                { text: 'Unlimited workspaces', included: true },
+                { text: 'Kanban board', included: true },
+                { text: 'Full comment threads', included: true },
+                { text: 'Team collaboration', included: true },
+            ],
+            cta: 'Start Team Trial',
+            ctaVariant: 'secondary' as const,
         },
     ];
 
@@ -334,6 +394,7 @@ const Home = () => {
             </div>
 
             <>
+                {/* Features Section */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="text-center mb-12">
                         <Title level={3}>Features</Title>
@@ -358,6 +419,218 @@ const Home = () => {
                     </Row>
                 </div>
 
+                <div style={{ background: '#fff', borderTop: '1px solid #e5e5e5', borderBottom: '1px solid #e5e5e5' }}>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                        <div className="text-center mb-14">
+                            <Title level={2} style={{ marginBottom: 8, fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#171717' }}>
+                                Pick your plan
+                            </Title>
+                            <Text style={{ color: '#737373', fontSize: '1.05rem' }}>
+                                Start free. Upgrade when your team needs more.
+                            </Text>
+                        </div>
+
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '24px',
+                                alignItems: 'stretch',
+                                maxWidth: 960,
+                                margin: '0 auto',
+                            }}
+                        >
+                            {plans.map((plan) => (
+                                <div
+                                    key={plan.name}
+                                    style={{
+                                        background: plan.highlight ? '#171717' : '#fff',
+                                        border: plan.highlight ? 'none' : '1px solid #e5e5e5',
+                                        borderRadius: 20,
+                                        padding: '32px 28px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        position: 'relative',
+                                        boxShadow: plan.highlight
+                                            ? '0 20px 60px rgba(0,0,0,0.2)'
+                                            : '0 1px 4px rgba(0,0,0,0.05)',
+                                        transform: plan.highlight ? 'scale(1.03)' : 'scale(1)',
+                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                    }}
+                                    onMouseEnter={e => {
+                                        (e.currentTarget as HTMLElement).style.boxShadow = plan.highlight
+                                            ? '0 28px 80px rgba(0,0,0,0.28)'
+                                            : '0 8px 24px rgba(0,0,0,0.1)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        (e.currentTarget as HTMLElement).style.boxShadow = plan.highlight
+                                            ? '0 20px 60px rgba(0,0,0,0.2)'
+                                            : '0 1px 4px rgba(0,0,0,0.05)';
+                                    }}
+                                >
+                                    {/* Badge */}
+                                    {plan.badge && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: -14,
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            background: '#eab308',
+                                            color: '#713f12',
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            padding: '4px 14px',
+                                            borderRadius: 99,
+                                            whiteSpace: 'nowrap',
+                                        }}>
+                                            {plan.badge}
+                                        </div>
+                                    )}
+
+                                    {/* Plan name */}
+                                    <div style={{ marginBottom: 6 }}>
+                                        <span style={{
+                                            fontSize: 13,
+                                            fontWeight: 700,
+                                            letterSpacing: '0.08em',
+                                            textTransform: 'uppercase' as const,
+                                            color: plan.highlight ? '#a3a3a3' : '#737373',
+                                        }}>
+                                            {plan.name}
+                                        </span>
+                                    </div>
+
+                                    {/* Price */}
+                                    <div style={{ marginBottom: 8, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                                        <span style={{
+                                            fontSize: '3rem',
+                                            fontWeight: 800,
+                                            letterSpacing: '-0.04em',
+                                            color: plan.highlight ? '#fff' : '#171717',
+                                            lineHeight: 1,
+                                        }}>
+                                            {plan.price}
+                                        </span>
+                                        <span style={{ fontSize: 14, color: plan.highlight ? '#a3a3a3' : '#9ca3af', fontWeight: 500 }}>
+                                            / {plan.period}
+                                        </span>
+                                    </div>
+
+                                    {/* Description */}
+                                    <p style={{
+                                        fontSize: 14,
+                                        color: plan.highlight ? '#a3a3a3' : '#737373',
+                                        marginBottom: 24,
+                                        lineHeight: 1.5,
+                                    }}>
+                                        {plan.description}
+                                    </p>
+
+                                    {/* Divider */}
+                                    <div style={{
+                                        height: 1,
+                                        background: plan.highlight ? 'rgba(255,255,255,0.1)' : '#f0f0f0',
+                                        marginBottom: 20,
+                                    }} />
+
+                                    {/* Features list */}
+                                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        {plan.features.map((f, i) => (
+                                            <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <span style={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                    fontSize: 11,
+                                                    background: f.included
+                                                        ? (plan.highlight ? '#eab308' : '#dcfce7')
+                                                        : (plan.highlight ? 'rgba(255,255,255,0.08)' : '#f5f5f5'),
+                                                    color: f.included
+                                                        ? (plan.highlight ? '#713f12' : '#16a34a')
+                                                        : (plan.highlight ? '#555' : '#d4d4d4'),
+                                                }}>
+                                                    {f.included ? <CheckOutlined /> : <CloseOutlined />}
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 14,
+                                                    color: f.included
+                                                        ? (plan.highlight ? '#e5e5e5' : '#525252')
+                                                        : (plan.highlight ? '#555' : '#a3a3a3'),
+                                                    textDecoration: f.included ? 'none' : 'none',
+                                                }}>
+                                                    {f.text}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* CTA */}
+                                    <Link to="/register" style={{ display: 'block' }}>
+                                        <button
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px 24px',
+                                                borderRadius: 12,
+                                                fontSize: 14,
+                                                fontWeight: 700,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s',
+                                                border: plan.highlight
+                                                    ? 'none'
+                                                    : plan.name === 'Free'
+                                                        ? '1.5px solid #e5e5e5'
+                                                        : 'none',
+                                                background: plan.highlight
+                                                    ? '#eab308'
+                                                    : plan.name === 'Free'
+                                                        ? 'transparent'
+                                                        : '#171717',
+                                                color: plan.highlight
+                                                    ? '#713f12'
+                                                    : plan.name === 'Free'
+                                                        ? '#525252'
+                                                        : '#fff',
+                                            }}
+                                            onMouseEnter={e => {
+                                                const el = e.currentTarget as HTMLElement;
+                                                if (plan.highlight) {
+                                                    el.style.background = '#ca8a04';
+                                                } else if (plan.name === 'Free') {
+                                                    el.style.background = '#f5f5f5';
+                                                } else {
+                                                    el.style.background = '#404040';
+                                                }
+                                            }}
+                                            onMouseLeave={e => {
+                                                const el = e.currentTarget as HTMLElement;
+                                                if (plan.highlight) {
+                                                    el.style.background = '#eab308';
+                                                } else if (plan.name === 'Free') {
+                                                    el.style.background = 'transparent';
+                                                } else {
+                                                    el.style.background = '#171717';
+                                                }
+                                            }}
+                                        >
+                                            {plan.cta}
+                                        </button>
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Trust note */}
+                        <p style={{ textAlign: 'center', marginTop: 32, fontSize: 13, color: '#a3a3a3' }}>
+                            No credit card required · Cancel anytime · Free plan always free
+                        </p>
+                    </div>
+                </div>
+
+                {/* CTA Banner */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div
                         className="rounded-2xl p-12 text-center"
