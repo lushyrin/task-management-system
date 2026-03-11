@@ -14,6 +14,8 @@ const Kanban = lazy(() => import('../pages/Kanban'));
 const WorkspacePage = lazy(() => import('../pages/WorkspacePage'));
 const WorkspaceSettings = lazy(() => import('../pages/WorkspaceSettings'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const PaymentSuccess = lazy(() => import('../pages/PaymentSucess'));
+const PaymentCancel = lazy(() => import('../pages/PaymentCancel'));
 
 // Fast loading spinner component
 const FastSpinner = () => (
@@ -26,7 +28,7 @@ const FastSpinner = () => (
 const ProtectedRoute = () => {
     const { isAuthenticated, isLoading } = useAuth();
 
-    // Quick loading check - if we have localStorage data, don't show loading
+    // Quick loading check - if we have localStorage data, dont show loading
     const hasLocalAuth = !!localStorage.getItem('token');
 
     if (isLoading && !hasLocalAuth) {
@@ -140,6 +142,22 @@ export const routes = createBrowserRouter([
                         element: (
                             <PageWrapper>
                                 <WorkspaceSettings />
+                            </PageWrapper>
+                        ),
+                    },
+                    {
+                        path: '/payment/success',
+                        element: (
+                            <PageWrapper>
+                                <PaymentSuccess />
+                            </PageWrapper>
+                        ),
+                    },
+                    {
+                        path: '/payment/cancel',
+                        element: (
+                            <PageWrapper>
+                                <PaymentCancel />
                             </PageWrapper>
                         ),
                     },

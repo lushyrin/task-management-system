@@ -38,7 +38,7 @@ export const useGetProfile = () => {
         // Don't refetch on window focus for auth
         refetchOnWindowFocus: false,
         // Short stale time to keep data fresh but not block UI
-        staleTime: 5 * 60 * 1000,
+        staleTime: 0,
         // Retry only once on failure, quickly
         retry: 1,
         retryDelay: 1000,
@@ -81,6 +81,13 @@ export const useAuth = (): UseAuthReturn => {
     useEffect(() => {
         setInitialCheckDone(true);
     }, []);
+
+    // Keep localStorage in sync with the latest profile data from the server
+    useEffect(() => {
+        if (user) {
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+        }
+    }, [user]);
 
     const logout = () => {
         localStorage.removeItem(STORAGE_KEYS.TOKEN);

@@ -281,7 +281,7 @@ func (s *WorkspaceService) AssignTask(workspaceID, taskID, ownerID string, req *
 }
 func (s *WorkspaceService) UpdateTask(workspaceID, taskID, requesterID string, req *UpdateWorkspaceTaskRequest) (*models.Task, error) {
 	println("DEBUG Service - workspaceID:", workspaceID, "taskID:", taskID, "requesterID:", requesterID)
-	
+
 	// Check if user is a member of the workspace
 	member, err := s.workspaceRepo.FindMember(workspaceID, requesterID)
 	if err != nil {
@@ -336,5 +336,5 @@ func (s *WorkspaceService) DeleteTask(workspaceID, taskID, requesterID string) e
 	if err != nil || member.Role != models.RoleOwner {
 		return errors.New("only the owner can delete workspace tasks")
 	}
-	return s.taskRepo.Delete(taskID, requesterID)
+	return s.db.Where("id = ? AND workspace_id = ?", taskID, workspaceID).Delete(&models.Task{}).Error
 }

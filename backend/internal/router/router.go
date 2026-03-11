@@ -58,6 +58,7 @@ func (r *Router) Setup(e *echo.Echo) {
 	// Payment routes (protected)
 	payments := protected.Group("/payments")
 	payments.POST("/checkout", r.paymentHandler.CreateCheckout)
+	payments.GET("/verify", r.paymentHandler.VerifyPayment)
 	payments.GET("/status", r.paymentHandler.GetPlanStatus)
 
 	tasks := protected.Group("/tasks")

@@ -7,6 +7,8 @@ export interface User {
     createdAt: string;
     updatedAt: string;
     tasks?: Task[];
+    plan: 'free' | 'pro';
+    planExpiresAt: string | null;
 }
 
 export interface AuthResponse {

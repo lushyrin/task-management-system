@@ -8,11 +8,15 @@ import {
     LoginOutlined,
     UnorderedListOutlined,
     CloseOutlined,
+    CrownOutlined,
 } from "@ant-design/icons";
 import { Modal, Form, Input, Tabs, Spin, Tooltip, Avatar, Button } from "antd";
 import { useWorkspaces, useCreateWorkspace, useJoinWorkspace } from "../../../hooks/useWorkspace";
 import { useAuth } from "../../../hooks/useAuth";
 import WorkspaceCard from "../../molecules/WorkspaceCard";
+import { usePlan } from '@/hooks/usePlan';
+import UpgradeModal from '@/components/molecules/UpgradeModal';
+
 
 // Helper to get query params from URL
 const useQuery = () => {
@@ -53,11 +57,11 @@ const Sidebar = ({ mobileOpen = false, onClose }: SidebarProps) => {
 
     // Check if viewing a workspace task (has workspace query param)
     const workspaceFromQuery = query.get('workspace');
-    
+
     // Personal tasks: /tasks without workspace query, or /tasks/:id without workspace query
     const isPersonalTasks = (location.pathname === "/tasks" || location.pathname.startsWith("/tasks")) && !workspaceFromQuery;
     const isPersonalKanban = location.pathname === "/kanban";
-    
+
     // Active workspace: either from /workspace/:id path or from ?workspace=xxx query param
     const activeWorkspaceId = location.pathname.startsWith("/workspace/")
         ? location.pathname.split("/")[2]
@@ -123,10 +127,13 @@ const Sidebar = ({ mobileOpen = false, onClose }: SidebarProps) => {
             <span className="text-sm font-medium flex-1">{label}</span>
         </div>
     );
+    const { canCreateWorkspace, isFree } = usePlan();
+    const [upgradeOpen, setUpgradeOpen] = useState(false);
+    const [upgradeReason, setUpgradeReason] = useState('');
+
 
     return (
         <>
-            {/* Backdrop */}
             {mobileOpen && (
                 <div
                     className="md:hidden fixed inset-0 z-40"
@@ -189,7 +196,14 @@ const Sidebar = ({ mobileOpen = false, onClose }: SidebarProps) => {
                             </span>
                             <Tooltip title="Create or join">
                                 <button
-                                    onClick={() => setModalOpen(true)}
+                                    onClick={() => {
+                                        if (!canCreateWorkspace(workspaces?.length ?? 0)) {
+                                            setUpgradeReason("You've reached the 1 workspace limit on the Free plan.");
+                                            setUpgradeOpen(true);
+                                        } else {
+                                            setModalOpen(true);
+                                        }
+                                    }}
                                     className="w-6 h-6 rounded flex items-center justify-center transition-colors"
                                     style={{ background: colors.accent, color: colors.white }}
                                     onMouseEnter={(e) => { e.currentTarget.style.background = '#ca8a04'; }}
@@ -229,6 +243,49 @@ const Sidebar = ({ mobileOpen = false, onClose }: SidebarProps) => {
                         )}
                     </div>
                 </nav>
+
+                {isFree && (
+                    <div className="px-3 pb-3">
+                        <div
+                            style={{
+                                background: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 80%)',
+                                border: '1px solid #fde047',
+                                borderRadius: 12,
+                                padding: '12px 14px',
+                            }}
+                        >
+                            <div className="flex items-center gap-2 mb-1">
+                                <CrownOutlined style={{ color: '#a16207', fontSize: 13 }} />
+                                <span style={{ fontSize: 12, fontWeight: 700, color: '#713f12' }}>Free Plan</span>
+                            </div>
+                            <p style={{ fontSize: 11, color: '#854d0e', margin: '0 0 10px', lineHeight: 1.4 }}>
+                                2 workspace · 20 tasks limit. Upgrade to unlock more.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setUpgradeReason('Upgrade to Pro for unlimited tasks and up to 5 workspaces.');
+                                    setUpgradeOpen(true);
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '7px 12px',
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    background: '#eab308',
+                                    border: 'none',
+                                    color: '#713f12',
+                                    transition: 'background 0.15s',
+                                }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ca8a04'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#eab308'; }}
+                            >
+                                Upgrade to Pro
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="p-3" style={{ borderTop: `1px solid ${colors.border}` }}>
                     <div
@@ -316,6 +373,12 @@ const Sidebar = ({ mobileOpen = false, onClose }: SidebarProps) => {
                     </Button>
                 </Form>
             </Modal>
+
+            <UpgradeModal
+                open={upgradeOpen}
+                onClose={() => setUpgradeOpen(false)}
+                reason={upgradeReason}
+            />
         </>
     );
 };
