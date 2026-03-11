@@ -24,33 +24,33 @@ func main() {
 		&models.Comment{},
 		&models.Workspace{},
 		&models.WorkspaceMember{},
+		&models.PendingOrder{},
 	)
 	if err != nil {
 		panic("Failed to migrate tables: " + err.Error())
 	}
 	fmt.Println("Tables created/migrated successfully!")
 
-	// Repositories
 	userRepo := repository.NewUserRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
 	workspaceRepo := repository.NewWorkspaceRepository(db)
 
-	// Services
 	authService := service.NewAuthService(db, userRepo)
 	taskService := service.NewTaskService(db, taskRepo)
 	commentService := service.NewCommentService(db, commentRepo, taskRepo)
 	workspaceService := service.NewWorkspaceService(db, workspaceRepo, taskRepo, userRepo)
+	paymentService := service.NewPaymentService(db, userRepo)
 
-	// Handlers
 	authHandler := handler.NewAuthHandler(authService)
 	taskHandler := handler.NewTaskHandler(taskService)
 	commentHandler := handler.NewCommentHandler(commentService)
 	workspaceHandler := handler.NewWorkspaceHandler(workspaceService)
+	paymentHandler := handler.NewPaymentHandler(paymentService)
 
 	e := echo.New()
 
-	r := router.NewRouter(authHandler, taskHandler, commentHandler, workspaceHandler)
+	r := router.NewRouter(authHandler, taskHandler, commentHandler, workspaceHandler, paymentHandler)
 	r.Setup(e)
 
 	port := os.Getenv("PORT")

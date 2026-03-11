@@ -8,14 +8,16 @@ import (
 )
 
 type User struct {
-	ID        string         `gorm:"type:char(36);primary_key" json:"id"`
-	Username  string         `gorm:"uniqueIndex;not null" json:"username"`
-	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
-	Password  string         `gorm:"not null" json:"-"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-	Tasks     []Task         `json:"tasks,omitempty"`
+	ID            string         `gorm:"type:char(36);primary_key" json:"id"`
+	Username      string         `gorm:"uniqueIndex;not null" json:"username"`
+	Email         string         `gorm:"uniqueIndex;not null" json:"email"`
+	Password      string         `gorm:"not null" json:"-"`
+	CreatedAt     time.Time      `json:"createdAt"`
+	UpdatedAt     time.Time      `json:"updatedAt"`
+	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
+	Tasks         []Task         `json:"tasks,omitempty"`
+	Plan          string         `gorm:"default:'free'" json:"plan"`
+	PlanExpiresAt *time.Time     `json:"planExpiresAt"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error { // kalo disini fungsi before create itu buat bikin unique uuid

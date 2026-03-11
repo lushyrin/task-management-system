@@ -13,6 +13,7 @@ type Router struct {
 	taskHandler      *handler.TaskHandler
 	commentHandler   *handler.CommentHandler
 	workspaceHandler *handler.WorkspaceHandler
+	paymentHandler   *handler.PaymentHandler
 }
 
 func NewRouter(
@@ -20,12 +21,14 @@ func NewRouter(
 	taskHandler *handler.TaskHandler,
 	commentHandler *handler.CommentHandler,
 	workspaceHandler *handler.WorkspaceHandler,
+	paymentHandler *handler.PaymentHandler,
 ) *Router {
 	return &Router{
 		authHandler:      authHandler,
 		taskHandler:      taskHandler,
 		commentHandler:   commentHandler,
 		workspaceHandler: workspaceHandler,
+		paymentHandler:   paymentHandler,
 	}
 }
 
@@ -44,10 +47,18 @@ func (r *Router) Setup(e *echo.Echo) {
 	auth.POST("/register", r.authHandler.Register)
 	auth.POST("/login", r.authHandler.Login)
 
+	//  NO JWT middleware, Midtrans calls this directly
+	api.POST("/payments/webhook", r.paymentHandler.Webhook)
+
 	protected := api.Group("")
 	protected.Use(middleware.JWTMiddleware)
 
 	protected.GET("/profile", r.authHandler.GetProfile)
+
+	// Payment routes (protected)
+	payments := protected.Group("/payments")
+	payments.POST("/checkout", r.paymentHandler.CreateCheckout)
+	payments.GET("/status", r.paymentHandler.GetPlanStatus)
 
 	tasks := protected.Group("/tasks")
 	tasks.POST("", r.taskHandler.Create)
@@ -65,7 +76,6 @@ func (r *Router) Setup(e *echo.Echo) {
 	comments.PUT("/:id", r.commentHandler.Update)
 	comments.DELETE("/:id", r.commentHandler.Delete)
 
-	// Workspaces
 	workspaces := protected.Group("/workspaces")
 	workspaces.POST("", r.workspaceHandler.Create)
 	workspaces.GET("", r.workspaceHandler.GetAll)
@@ -85,7 +95,6 @@ func (r *Router) Setup(e *echo.Echo) {
 	workspaces.PUT("/:id/tasks/:taskId", r.workspaceHandler.UpdateTask)
 	workspaces.DELETE("/:id/tasks/:taskId", r.workspaceHandler.DeleteTask)
 
-	// Health check
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{"status": "ok"})
 	})
